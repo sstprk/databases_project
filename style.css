@@ -530,4 +530,35 @@ body {
     object-fit: cover;
   }
 
+  .sidebarS {
+    height: 100vh;
+    background-color: #f8f9fa;
+    padding: 20px;
+  }
 
+  .sidebarS button {
+    width: 100%;
+    margin-bottom: 10px;
+    background: linear-gradient(135deg, #0097A7, #FFE082); /* turkuaz + sıcak sarı */
+
+  }
+
+  .content-areaS {
+    padding: 20px;
+    min-height: 100vh;
+    border-left: 1px solid #dee2e6;
+  }
+
+
+  .sidebar .btn-outline-primary:hover {
+    color: white !important;
+  }
+  
+  .custom-container2 {
+    margin-top: 90px;
+    margin-right: 50px;
+    margin-left: 20px;
+    margin-bottom: 120px;
+    align-self: flex-start; /* sol tarafa yapışık */
+    width: 30%;
+  }
