@@ -14,35 +14,36 @@
     <div id="navbar-placeholder"></div>
     <script src="navbarLoader.js"></script>
 
-    <!-- Login Container -->
     <div class="login-container">
         <h2>Kayıt Ol</h2>
-        <form>
+        <form id="regForm">
             <input name="regName" type="text" class="form-control" placeholder="Adınız" required>
             <input name="regLastName" type="text" class="form-control" placeholder="Soyadınız" required>
             <input name="regEmail" class="form-control" placeholder="E-Posta adresiniz" required>
             <input name="regPassword" type="password" class="form-control" placeholder="Şifreniz" required>
-            <button type="submit" class="btn-login" onclick="submitForm">Kayıt Ol</button>
+            <button id="btnSub" type="submit" class="btn-login">Kayıt Ol</button>
         </form>
         <script>
-            function submitForm() {
-                const form = document.getElementById('myForm');
-
-                // Burada formun geçerli olup olmadığını kontrol ediyoruz
-                if (form.checkValidity()) {
-                    // Veriyi göndermeyi simüle ediyoruz (mesela fetch veya başka bir yöntemle)
-                    // Sonrasında yönlendirme işlemini gerçekleştiriyoruz
-                    window.location.href = "success.html"; // Veri gönderildikten sonra yönlendir
+            document.getElementById("regForm").addEventListener("submit", function(event){
+                // Form elemanlarını al
+                var name = document.getElementsByName("regName")[0].value;
+                var lastName = document.getElementsByName("regLastName")[0].value;
+                var email = document.getElementsByName("regEmail")[0].value;
+                var password = document.getElementsByName("regPassword")[0].value;
+    
+                // Eğer tüm alanlar doluysa yönlendirme yap
+                if(name && lastName && email && password){
+                    window.location.href = "login.html";  // Yönlendirme işlemi
                 } else {
-                    // Hatalı giriş varsa, tarayıcıdaki yerleşik validasyonu tetikliyoruz
-                    form.reportValidity();
+                    alert("Lütfen tüm alanları doldurun.");
+                    event.preventDefault(); // Formun gönderilmesini engelle
                 }
-            }
-
+            });
         </script>
-
-        
     </div>
+    
+    
+    
 
     <!-- Footer Placeholder -->
     <div id="footer-container" class="footer-custom"></div>

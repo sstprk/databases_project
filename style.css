@@ -263,7 +263,7 @@ body {
     border-radius: 12px;
     box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
     max-width: 1200px; /* Maksimum genişlik */
-    width: 90%; /* Ekran boyutuna göre genişlik */
+    width: 65%; /* Ekran boyutuna göre genişlik */
 }
 
 
@@ -390,3 +390,144 @@ body {
     width: 25px;
     height: 25px;
  }
+
+ 
+ .filter-section {
+  position: -webkit-sticky;
+  width: 18%;
+  position: sticky;
+  top: 20px; /* Navbar'dan boşluk bırakmak için */
+  height: fit-content;
+  padding: 15px 10px 15px 25px ;
+  background: #f8f9fa;
+  border-radius: 8px;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+.ads-section {
+  padding-left: 30px; /* Filtre ile arasına boşluk */
+}
+
+    /* Mobil cihazlar için düzenleme */
+    @media (max-width: 768px) {
+      .main-content {
+        flex-direction: column;
+      }
+      .filter-section {
+        width: 100%;
+        position: static;
+        margin-bottom: 20px;
+      }
+    }
+    .custom-container {
+      margin-top: 90px;
+      margin-right: 50px;
+      margin-left: 0;
+      margin-bottom: 120px;
+      align-self: flex-start; /* sol tarafa yapışık */
+      width: calc(100% - 50px);
+    }
+    .social-icons {
+      margin-top: 30px;
+      text-align: center;
+    }
+    
+    .social-icons a {
+      display: inline-block;
+      margin: 0 10px;
+      color: #555;
+      font-size: 22px;
+      transition: color 0.3s, transform 0.3s;
+    }
+    
+    .social-icons a:hover {
+      color: #007bff;
+      transform: scale(1.2);
+    }
+    
+    
+      
+      
+      
+      
+      .container-cs {
+        max-width: 600px;
+        margin-top: 140px;
+        margin-bottom: 70px;
+        background: #fff;
+        border-radius: 12px;
+        padding: 30px;
+        box-shadow: 0 8px 16px rgba(0, 0, 0, 0.1);
+      }
+      
+      
+      
+      .contact-form .form-group {
+        margin-bottom: 20px;
+      }
+      
+      .contact-form label {
+        display: block;
+        margin-bottom: 8px;
+        font-weight: 600;
+      }
+      
+      .contact-form input,
+      .contact-form textarea {
+        width: 100%;
+        padding: 12px 14px;
+        border: 1px solid #ccc;
+        border-radius: 8px;
+        font-size: 15px;
+        transition: border 0.3s;
+      }
+      
+      .contact-form input:focus,
+      .contact-form textarea:focus {
+        border-color: #007bff;
+        outline: none;
+      }
+      
+      .button-s1 {
+        background-color: #007bff;
+        color: white;
+        padding: 14px 22px;
+        border: none;
+        border-radius: 8px;
+        font-size: 16px;
+        cursor: pointer;
+        transition: background 0.3s;
+      }
+      
+      .button-s1:hover {
+        background-color: #0056b3;
+      }
+  .custom-card {
+    border: none;
+    overflow: hidden;
+    border-radius: 15px;
+    transition: transform 0.3s ease;
+  }
+
+  .custom-card:hover {
+    transform: scale(1.03);
+  }
+
+  .card-img-overlay-price {
+    position: absolute;
+    bottom: 10px;
+    right: 10px;
+    background: linear-gradient(135deg, #0097A7, #FFE082); /* turkuaz + sıcak sarı */
+    color: white;
+    padding: 5px 10px;
+    border-radius: 10px;
+    font-weight: bold;
+    font-size: 1rem;
+  }
+
+  .card-img-top {
+    height: 250px;
+    object-fit: cover;
+  }
+
+
