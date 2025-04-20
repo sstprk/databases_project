@@ -21,8 +21,16 @@
             <input name="regLastName" type="text" class="form-control" placeholder="Soyadınız" required>
             <input name="regEmail" class="form-control" placeholder="E-Posta adresiniz" required>
             <input name="regPassword" type="password" class="form-control" placeholder="Şifreniz" required>
+            
+            <!-- Host olup olmadığını belirten checkbox ekledik -->
+            <div class="form-check">
+                <input name="isHost" type="checkbox" class="form-check-input" id="hostCheckbox">
+                <label class="form-check-label" for="hostCheckbox">Host olarak kayıt oluyorum</label>
+            </div>
+            
             <button id="btnSub" type="submit" class="btn-login">Kayıt Ol</button>
         </form>
+        
         <script>
             document.getElementById("regForm").addEventListener("submit", function(event){
                 // Form elemanlarını al
