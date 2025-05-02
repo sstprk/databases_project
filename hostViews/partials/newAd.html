@@ -1,0 +1,34 @@
+<div class="container py-4">
+    <h3 class="mb-4">Yeni İlan Ver</h3>
+
+    <form>
+        <!-- İlan Başlığı -->
+        <div class="mb-3">
+            <label for="ilanBaslik" class="form-label">İlan Başlığı</label>
+            <input name="adTitle" type="text" class="form-control" id="ilanBaslik" placeholder="Örn: Deniz manzaralı yazlık"
+                required />
+        </div>
+
+        <!-- Açıklama -->
+        <div class="mb-3">
+            <label for="ilanAciklama" class="form-label">Açıklama</label>
+            <textarea name="adDescription" class="form-control" id="ilanAciklama" rows="4" placeholder="İlan hakkında detaylı bilgi verin..."
+                required></textarea>
+        </div>
+
+        <!-- Günlük Ücret -->
+        <div class="mb-3">
+            <label for="gunlukUcret" class="form-label">Günlük Ücret (₺)</label>
+            <input name="adDailyPrice" type="number" class="form-control" id="gunlukUcret" placeholder="Örn: 750" required />
+        </div>
+
+        <!-- Resim Yükleme -->
+        <div class="mb-4">
+            <label for="ilanResim" class="form-label">İlan Görseli</label>
+            <input name="adImg" class="form-control" type="file" id="ilanResim" accept="image/*" required />
+        </div>
+
+        <!-- Gönder Butonu -->
+        <button type="submit" class="login-btn">İlanı Yayınla</button>
+    </form>
+</div>
