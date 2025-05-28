@@ -1,0 +1,48 @@
+@{
+    Layout = "~/Views/Shared/_Layout2.cshtml";
+    ViewData["Title"] = "Settings";
+}
+<div class="container py-4">
+  <h3 class="mb-4">Hesap Ayarları</h3>
+
+  <div class="row">
+    
+
+    <div class="col-md-8">
+      <!-- Sabit Bilgiler -->
+      <div class="mb-3">
+        <label class="form-label">Ad Soyad</label>
+        <div class="form-control bg-light" readonly>Ali Veli</div>
+      </div>
+
+      <div class="mb-3">
+        <label class="form-label">E-posta</label>
+        <div class="form-control bg-light" readonly>ali.veli@example.com</div>
+      </div>
+
+      <hr class="my-4" />
+
+      <!-- Şifre Güncelleme -->
+      <h5>Şifre Güncelle</h5>
+
+      <form>
+        <div class="mb-3">
+          <label for="sifreEski" class="form-label">Mevcut Şifre</label>
+          <input type="password" class="form-control" id="sifreEski" />
+        </div>
+
+        <div class="mb-3">
+          <label for="sifreYeni" class="form-label">Yeni Şifre</label>
+          <input type="password" class="form-control" id="sifreYeni" />
+        </div>
+
+        <div class="mb-3">
+          <label for="sifreYeniTekrar" class="form-label">Yeni Şifre (Tekrar)</label>
+          <input type="password" class="form-control" id="sifreYeniTekrar" />
+        </div>
+
+        <button type="submit" class="btn-login">Kaydet</button>
+      </form>
+    </div>
+  </div>
+</div>

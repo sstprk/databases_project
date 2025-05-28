@@ -1,0 +1,45 @@
+@model IEnumerable<realCabinly.Models.Users>
+@{
+    ViewData["Title"] = "Deneme";
+    Layout= "~/Views/Shared/_Layout2.cshtml";
+}
+
+<table>
+<tr>
+    <th>
+        @Html.DisplayNameFor(modelitem => modelitem.name)
+    </th>
+    <th>
+        @Html.DisplayNameFor(modelitem => modelitem.role)
+    </th>
+    <th>
+        @Html.DisplayNameFor(modelitem => modelitem.email)
+    </th>
+    <th>
+        @Html.DisplayNameFor(modelitem => modelitem.password_hash)
+    </th>
+    
+</tr>
+</table>
+    @foreach(var item in Model)
+    {
+        <tr>
+            <td>
+                @Html.DisplayFor(modelItem => item.name)
+            </td>
+            <td>
+                @Html.DisplayFor(modelItem => item.role)
+            </td>
+            <td>
+                @Html.DisplayFor(modelItem => item.email)
+            </td>
+            <td>
+                @Html.DisplayFor(modelItem => item.password_hash)
+            </td>
+            
+        </tr>
+    }
+    
+}
+
+

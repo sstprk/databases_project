@@ -1,0 +1,28 @@
+@{
+    Layout = "~/Views/Shared/_Layout2.cshtml";
+    ViewData["Title"] = "Host Page";
+}
+
+
+
+<div class="custom-container">
+    <div class="row">
+      <!-- Sol Menü -->
+      <div class="col-md-3 sidebarS">
+        <button  class="btn-login" onclick="loadContent('myAds')"> <a asp-controller="Host" asp-action="myAds"> İlanlarım</a></button>
+        <button class="btn-login" onclick="loadContent('activeReservations')"> <a asp-controller="Host" asp-action="activeReservations">Aktif Rezervasyonlarım</a></button>
+        <button class="btn-login" onclick="loadContent('reservationHistory')"> <a asp-controller="Host" asp-action="reservationHistory">Geçmiş Rezervasyonlarım</a></button>
+        <button class="btn-login" onclick="loadContent('newAd')"> <a asp-controller="Host" asp-action="newAd">Yeni İlan Ver </a></button>
+        <button class="btn-login" onclick="loadContent('settings')"> <a asp-controller="Host" asp-action="settings">Ayarlar</a></button>
+        <button class="btn-login" id="btn-quit">Çıkış Yap</button>
+
+      </div>
+
+
+      <!-- Sağ İçerik Alanı -->
+      <div class="col-md-9 content-areaS" id="icerik">
+        <h4>Hoşgeldiniz!</h4>
+        <p>Sol menüden bir seçenek seçiniz.</p>
+      </div>
+    </div>
+  </div>
