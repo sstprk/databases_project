@@ -1,0 +1,149 @@
+@model List<realCabinly.Models.IlanView>
+
+@{
+    ViewData["Title"] = "İlanlar";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+<div id="navbar-placeholder"></div>
+@*<script src="navbarLoader.js"></script>*@ @* Bu satır JS hatasına neden oluyorsa veya gerekmiyorsa kaldırılabilir/yorum satırı yapılabilir *@
+
+<div class="search-container">
+    <h2>Rezervasyon Yapın</h2>
+    <div class="search-form">
+        <input type="text" placeholder="İstediğiniz şehri veya bölgeyi aratınız">
+        <select>
+            <option value="1">1 Kişi</option>
+            <option value="2">2 Kişi</option>
+            <option value="3">3 Kişi</option>
+            <option value="4">4 Kişi</option>
+            <option value="5">5+ Kişi</option>
+        </select>
+        <div class="dates-container">
+            <input type="date">
+            <input type="date">
+        </div>
+        <button>Arama Yap</button>
+    </div>
+</div>
+
+<div class="custom-container mt-4">
+    <div class="row">
+        <!-- Filtre Bölümü -->
+        <div class="col-md-3 filter-section">
+            <h4>Filtrele</h4>
+            <form onsubmit="return false;">
+                <div class="form-group mb-3">
+                    <label class="form-label">
+                        Fiyat Aralığı:
+                        <span id="priceRangeValue">0₺ - 1000₺</span>
+                    </label>
+                    <input type="range" class="form-range" id="priceMin" min="0" max="1000" step="10" value="0" />
+                    <input type="range" class="form-range mt-1" id="priceMax" min="0" max="1000" step="10" value="1000" />
+                </div>
+                <div class="form-group mb-3">
+                    <label for="dateRangeStart" class="form-label">Giriş Tarihi</label>
+                    <input type="date" class="form-control" id="dateRangeStart" />
+                </div>
+                <div class="form-group mb-3">
+                    <label for="dateRangeEnd" class="form-label">Çıkış Tarihi</label>
+                    <input type="date" class="form-control" id="dateRangeEnd" />
+                </div>
+                <div class="d-grid">
+                    <button type="submit" class="btn btn-primary">Filtrele</button>
+                </div>
+            </form>
+        </div>
+
+        <!-- İlanlar Bölümü -->
+        <div class="col-md-9">
+            <div class="row" id="adsContainer">
+                @if (Model != null && Model.Any())
+                {
+                    foreach (var ilan in Model)
+                    {
+                        <div class="col-md-4 mb-4" data-price="@Convert.ToInt32(ilan.PricePerNight)">
+                            <div class="card custom-card shadow-sm h-100 position-relative">
+                                <img src="@ilan.ImageUrl" class="card-img-top" alt="@ilan.Title" style="height: 200px; object-fit: cover;" />
+                                <div class="card-body d-flex flex-column">
+                                    <h5 class="card-title mb-1">@ilan.Title</h5>
+                                    <p class="card-text text-muted small mb-2">@ilan.Location</p>
+                                    @*<p class="card-text small">@ilan.Description.Substring(0, Math.Min(ilan.Description.Length, 70))... </p>*@
+                                    <div class="mt-auto">
+                                        <span class="fw-bold fs-5 text-primary">₺@ilan.PricePerNight.ToString("N0")</span> <span class="text-muted small">/ gece</span>
+                                        @* Detaylar veya rezervasyon butonu eklenebilir *
+                                        @* <a href="#" class="btn btn-sm btn-outline-primary float-end">Detaylar</a> *@
+                                    </div>
+                                </div>
+                                <div class="card-img-overlay-price d-none">₺@ilan.PricePerNight.ToString("N0") / gece</div> @* Eski fiyat gösterimi gizlendi, yenisi card-body içinde *@ 
+                            </div>
+                        </div>
+                    }
+                }
+                else
+                {
+                    <div class="col-12">
+                        <p class="text-center text-muted mt-5">Gösterilecek uygun ilan bulunamadı.</p>
+                    </div>
+                }
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            const minInput = document.getElementById("priceMin");
+            const maxInput = document.getElementById("priceMax");
+            const valueLabel = document.getElementById("priceRangeValue");
+            const adsContainer = document.getElementById("adsContainer");
+            const noAdsMessage = adsContainer.querySelector(".col-12 p"); // İlan yok mesajı
+
+            function updateLabelAndFilter() {
+                let min = parseInt(minInput.value);
+                let max = parseInt(maxInput.value);
+                
+                if (min > max) {
+                    // Eğer min max'tan büyük olursa, ya min'i max'a eşitleriz ya da max'ı min'e
+                    // Kullanıcı deneyimi açısından max'ı min'e eşitlemek daha iyi olabilir
+                     min = max; // Veya tam tersi: max = min; maxInput.value = max;
+                     minInput.value = min;
+                }
+                valueLabel.innerText = `${min}₺ - ${max}₺`;
+
+                let visibleAdsCount = 0;
+                document.querySelectorAll("#adsContainer > div[data-price]").forEach((col) => {
+                    const price = parseInt(col.getAttribute("data-price"));
+                    if (price >= min && price <= max) {
+                        col.classList.remove("d-none");
+                        visibleAdsCount++;
+                    } else {
+                        col.classList.add("d-none");
+                    }
+                });
+
+                // İlan yok mesajının görünürlüğünü ayarla
+                if (noAdsMessage) {
+                    if (visibleAdsCount === 0 && Model && Model.Any()) { // Model doluysa ve filtre sonucu 0 ise göster
+                         noAdsMessage.classList.remove('d-none');
+                         noAdsMessage.innerText = "Bu fiyat aralığında uygun ilan bulunamadı.";
+                    } else if (!Model || !Model.Any()) { // Model zaten boşsa
+                         noAdsMessage.classList.remove('d-none');
+                         noAdsMessage.innerText = "Gösterilecek uygun ilan bulunamadı.";
+                    } else {
+                        noAdsMessage.classList.add('d-none');
+                    }
+                }
+            }
+            
+            if (minInput && maxInput && valueLabel && adsContainer) { // Elementlerin varlığını kontrol et
+                 minInput.addEventListener("input", updateLabelAndFilter);
+                 maxInput.addEventListener("input", updateLabelAndFilter);
+                 updateLabelAndFilter(); // Sayfa yüklendiğinde uygula
+            } else {
+                console.error("Filtreleme için gerekli HTML elementlerinden biri veya daha fazlası bulunamadı.");
+            }
+        });
+    </script>
+}

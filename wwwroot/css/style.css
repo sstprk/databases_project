@@ -1,0 +1,567 @@
+/* Genel vücut stili */
+body {
+  background: #f7f7f7;
+  font-family: 'Arial', sans-serif;
+  display: flex;
+  flex-direction: column;
+  justify-content: center; /* Dikeyde ortalama */
+  align-items: center; /* Yatayda ortalama */
+  margin: 0;
+  padding: 0;
+  overflow-y: auto; /* İçerik sığmazsa kaydırma ekler */
+  min-height: 100vh;
+}
+
+/* Navbar özelleştirmeleri */
+.navbar-custom {
+  width: 100%; /* Ekran genişliğine yayılmasını sağla */
+  background: linear-gradient(135deg, #0097A7, #FFE082); /* turkuaz + sıcak sarı */
+  backdrop-filter: blur(10px);
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
+  position: fixed; /* Sabit konumda tut */
+  top: 0;
+  left: 0;
+  z-index: 1000; /* Diğer öğelerin üstünde görünmesini sağla */
+}
+
+.navbar-brand {
+  font-weight: bold;
+  font-size: 1.6rem;
+  color: #fff9e5 !important;
+  letter-spacing: 1px;
+}
+
+.navbar-nav .nav-link {
+  color: #fff9e5 !important;
+  transition: 0.3s;
+  font-size: 1.1rem;
+}
+
+.navbar-nav .nav-link:hover,
+.navbar-nav .nav-link.active {
+  color: #fff;
+  text-shadow: 0 0 5px rgba(255, 255, 255, 0.5);
+}
+
+.navbar-toggler {
+  border: none;
+}
+
+.navbar-toggler-icon {
+  filter: invert(1);
+}
+.login-btn {
+  background-color: #00B0B9; /* Ana renk: Su yeşili */
+  color: white; /* Yazı rengi beyaz */
+  border-radius: 30px; /* Yuvarlatılmış köşeler */
+  padding: 10px 20px; /* Butonun içine biraz boşluk ekleyelim */
+  font-size: 16px; /* Yazı boyutunu uygun hale getirelim */
+  text-transform: uppercase; /* Buton metnini büyük harf yapalım */
+  font-weight: bold; /* Daha dikkat çekici yazı */
+  transition: background-color 0.3s ease; /* Hover geçişi için animasyon ekleyelim */
+  border: none; /* Kenarlıkları kaldırıyoruz */
+  display: inline-flex;
+  align-items: center;
+}
+
+.login-btn:hover {
+  background-color: #008080; /* Hover rengi: Su yeşili tonları */
+  cursor: pointer; /* İmleç pointer olacak */
+}
+
+.login-btn:focus {
+  outline: none; /* Fokus olduğunda kenarlık gösterilmesin */
+}
+
+/* Login container stili */
+/* Login container stili */
+.login-container {
+  background-color: #fff;
+  padding: 30px;
+  border-radius: 10px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  width: 100%;
+  max-width: 400px;
+  margin-top: 200px; /* Navbar'a boşluk bırakmak için */
+  max-height: 90vh; /* Yüksekliği ekranın %90'ı ile sınırlamak */
+  margin-bottom: 200px; /* Footer'dan uzaklaştırmak için alt margin */
+  z-index: 999; /* Navbar'ın üstünde olmasın */
+}
+
+/* Başlık stili */
+.login-container h2 {
+  text-align: center;
+  color: #333;
+  margin-bottom: 20px;
+}
+
+/* Input alanı stilleri */
+.form-control {
+  border-radius: 8px;
+  border: 1px solid #ddd;
+  padding: 15px;
+  margin-bottom: 15px;
+}
+
+/* Focus olduğunda input renkleri */
+.form-control:focus {
+  border-color: #0097A7;
+  box-shadow: 0 0 5px rgba(0, 151, 167, 0.5);
+}
+
+/* Login butonu stilleri */
+.btn-login {
+  width: 100%;
+  background-color: #0097A7;
+  color: white;
+  padding: 12px;
+  border: none;
+  border-radius: 8px;
+  font-size: 1.1rem;
+  transition: background-color 0.3s;
+}
+
+.btn-login:hover {
+  background-color: #007C8C;
+}
+
+/* Form altındaki link stil */
+.form-text {
+  text-align: center;
+  margin-top: 10px;
+}
+
+.form-text a {
+  color: #0097A7;
+  text-decoration: none;
+}
+
+.form-text a:hover {
+  text-decoration: underline;
+}
+
+/* Footer özelleştirmeleri */
+.footer-custom {
+  width: 100%; /* Ekran genişliğine yayılmasını sağla */
+  background: linear-gradient(135deg, #0097A7, #FFE082);
+  color: #fff9e5;
+  box-shadow: 0 -4px 10px rgba(0, 0, 0, 0.2);
+  padding: 20px 0;
+  position: relative;
+  bottom: 0;
+  text-align: center;
+}
+
+.footer-link {
+  color: #fff9e5;
+  text-decoration: none;
+  transition: 0.3s;
+}
+
+.footer-link:hover {
+  text-decoration: underline;
+  color: #ffffff;
+}
+.text-link {
+  color: inherit;
+  text-decoration: none;
+  display: block;
+width: 100%;
+height: 100%;
+}
+.about-box {
+  max-width: 900px; /* Kutunun genişliğini daha uygun hale getirdik */
+  margin: 80px auto; /* Sayfa ortasında yer alması için */
+  padding: 30px;
+  background-color: white;
+  border-radius: 16px;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1); /* Daha yumuşak gölge */
+  font-family: 'Arial', sans-serif;
+  line-height: 1.6;
+  color: #333; /* Yazı rengini biraz daha koyu yaptık */
+}
+
+.about-box h2 {
+  text-align: center;
+  font-size: 30px;
+  color: #333;
+  margin-bottom: 20px;
+}
+
+.about-box p {
+  text-align: justify;
+  margin-bottom: 15px;
+  font-size: 16px;
+  color: #555;
+}
+
+.about-box p:last-child {
+  margin-bottom: 0;
+}
+
+/* Duyarlı tasarım için küçük ekranlarda kutuyu iyileştir */
+@media (max-width: 768px) {
+  .about-box {
+    padding: 20px;
+  }
+
+  .about-box h2 {
+    font-size: 24px;
+  }
+
+  .about-box p {
+    font-size: 14px;
+  }
+}
+
+.contact-container {
+  max-width: 600px;
+  margin: 80px auto; /* Sayfanın üstünden 80px boşluk */
+  padding: 40px;
+  background-color: #ffffff;
+  border-radius: 12px;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+  font-family: Arial, sans-serif;
+}
+
+.contact-container h2 {
+  text-align: center;
+  margin-bottom: 20px;
+}
+
+.contact-container h4 {
+  margin-top: 20px;
+  margin-bottom: 8px;
+  color: #333;
+}
+
+.contact-container p,
+.contact-container ul {
+  color: #555;
+  line-height: 1.6;
+}
+
+.contact-container a {
+  color: #007BFF;
+  text-decoration: none;
+}
+
+.contact-container a:hover {
+  text-decoration: underline;
+}
+
+.contact-container ul {
+  padding-left: 20px;
+}
+
+
+.search-container {
+  margin: 120px 10px auto; /* Üstten 80px, alttan 80px, yanlardan auto (merkezleme) */
+  padding: 20px;
+  background: linear-gradient(135deg, #00B0B9, #FFD082); /* Hafif soluk versiyon */
+  backdrop-filter: blur(10px);
+  border-radius: 12px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+  max-width: 1200px; /* Maksimum genişlik */
+  width: 65%; /* Ekran boyutuna göre genişlik */
+  margin-left: 20%;
+  margin-right: 20%;
+  margin-top: 10%;
+}
+
+
+.search-container h2 {
+  color: white;
+  text-align: center;
+  margin-bottom: 20px;
+  font-size: 24px;
+}
+
+.search-form {
+  display: flex;
+  justify-content: space-between;
+  gap: 20px;
+  flex-wrap: wrap; /* Elemanların alt alta gelmesini sağlar */
+}
+
+.search-form input,
+.search-form select,
+.search-form button {
+  padding: 10px;
+  font-size: 16px;
+  border-radius: 8px;
+  border: 1px solid #ddd;
+}
+
+.search-form input[type="text"] {
+  width: 40%;
+}
+
+.search-form select {
+  width: 20%;
+}
+
+.search-form input[type="date"] {
+  width: 45%;
+}
+
+.search-form button {
+  background-color: #00B0B9;
+  color: white;
+  border: none;
+  cursor: pointer;
+  width: 15%;
+}
+
+.search-form button:hover {
+  background-color: #008C8C;
+}
+
+.search-form input[type="text"]::placeholder {
+  color: #7F8C8D;
+}
+
+/* Duyarlı Tasarım */
+@media (max-width: 768px) {
+  .search-container {
+    width: 95%; /* Mobilde biraz daha geniş */
+  }
+
+  .search-form input[type="text"],
+  .search-form select,
+  .search-form input[type="date"],
+  .search-form button {
+    width: 100%; /* Elemanları alt alta getirmek için */
+    margin-bottom: 10px; /* Alt kısımlara boşluk */
+  }
+
+  .search-form {
+    gap: 10px; /* Flexbox arası boşluk */
+  }
+
+  /* Gidiş ve dönüş tarihini yan yana yerleştir */
+  .search-form .dates-container {
+    display: flex;
+    gap: 20px;
+    width: 100%;
+  }
+
+  .search-form .dates-container input[type="date"] {
+    width: 48%; /* Her iki tarihe de genişlik ver */
+  }
+}
+#carouselExampleControls {
+  max-width: 1100px; /* Carousel'in maksimum genişliği */
+  margin: 50px auto; /* Ortalamak için */
+}
+
+
+.carousel-inner {
+  overflow: hidden; /* Fazla alanları gizler */
+}
+
+.carousel-inner img {
+  width: 100%; /* Resimler her zaman kapsayıcının genişliğine uyar */
+  height: 100%; /* Resimler yüksekliğini kapsayıcıya göre ayarlar */
+  object-fit: cover; /* Resimler orantılı şekilde sığdırılır */
+}
+.login-btn {
+  background-color: #00B0B9; /* Ana renk: Su yeşili */
+  color: white; /* Yazı rengi beyaz */
+  border-radius: 30px; /* Yuvarlatılmış köşeler */
+  padding: 10px 20px; /* Butonun içine biraz boşluk ekleyelim */
+  font-size: 16px; /* Yazı boyutunu uygun hale getirelim */
+  text-transform: uppercase; /* Buton metnini büyük harf yapalım */
+  font-weight: bold; /* Daha dikkat çekici yazı */
+  transition: background-color 0.3s ease, color 0.3s ease; /* Hover geçişi için animasyon ekleyelim */
+  border: none; /* Kenarlıkları kaldırıyoruz */
+  display: inline-flex;
+  align-items: center;
+  text-decoration: none; /* Link altını çizmeyi engelleyelim */
+}
+
+.login-btn:hover {
+  background-color: #008080; /* Hover rengi: Su yeşili tonları */
+  color: white; /* Hover durumunda yazı rengi beyaz kalacak */
+  cursor: pointer; /* İmleç pointer olacak */
+}
+
+.login-btn:focus {
+  outline: none; /* Fokus olduğunda kenarlık gösterilmesin */
+}
+.icons{
+  width: 25px;
+  height: 25px;
+}
+
+
+.filter-section {
+position: -webkit-sticky;
+width: 18%;
+position: sticky;
+top: 20px; /* Navbar'dan boşluk bırakmak için */
+height: fit-content;
+padding: 15px 10px 15px 25px ;
+background: #f8f9fa;
+border-radius: 8px;
+box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+.ads-section {
+padding-left: 30px; /* Filtre ile arasına boşluk */
+}
+
+  /* Mobil cihazlar için düzenleme */
+  @media (max-width: 768px) {
+    .main-content {
+      flex-direction: column;
+    }
+    .filter-section {
+      width: 100%;
+      position: static;
+      margin-bottom: 20px;
+    }
+  }
+  .custom-container {
+    margin-top: 90px;
+    margin-right: 50px;
+    margin-left: 0;
+    margin-bottom: 120px;
+    align-self: flex-start; /* sol tarafa yapışık */
+    width: calc(100% - 50px);
+  }
+  .social-icons {
+    margin-top: 30px;
+    text-align: center;
+  }
+  
+  .social-icons a {
+    display: inline-block;
+    margin: 0 10px;
+    color: #555;
+    font-size: 22px;
+    transition: color 0.3s, transform 0.3s;
+  }
+  
+  .social-icons a:hover {
+    color: #007bff;
+    transform: scale(1.2);
+  }
+  
+  
+    
+    
+    
+    
+    .container-cs {
+      max-width: 600px;
+      margin-top: 140px;
+      margin-bottom: 70px;
+      background: #fff;
+      border-radius: 12px;
+      padding: 30px;
+      box-shadow: 0 8px 16px rgba(0, 0, 0, 0.1);
+    }
+    
+    
+    
+    .contact-form .form-group {
+      margin-bottom: 20px;
+    }
+    
+    .contact-form label {
+      display: block;
+      margin-bottom: 8px;
+      font-weight: 600;
+    }
+    
+    .contact-form input,
+    .contact-form textarea {
+      width: 100%;
+      padding: 12px 14px;
+      border: 1px solid #ccc;
+      border-radius: 8px;
+      font-size: 15px;
+      transition: border 0.3s;
+    }
+    
+    .contact-form input:focus,
+    .contact-form textarea:focus {
+      border-color: #007bff;
+      outline: none;
+    }
+    
+    .button-s1 {
+      background-color: #007bff;
+      color: white;
+      padding: 14px 22px;
+      border: none;
+      border-radius: 8px;
+      font-size: 16px;
+      cursor: pointer;
+      transition: background 0.3s;
+    }
+    
+    .button-s1:hover {
+      background-color: #0056b3;
+    }
+.custom-card {
+  border: none;
+  overflow: hidden;
+  border-radius: 15px;
+  transition: transform 0.3s ease;
+}
+
+.custom-card:hover {
+  transform: scale(1.03);
+}
+
+.card-img-overlay-price {
+  position: absolute;
+  bottom: 10px;
+  right: 10px;
+  background: linear-gradient(135deg, #0097A7, #FFE082); /* turkuaz + sıcak sarı */
+  color: white;
+  padding: 5px 10px;
+  border-radius: 10px;
+  font-weight: bold;
+  font-size: 1rem;
+}
+
+.card-img-top {
+  height: 250px;
+  object-fit: cover;
+}
+
+.sidebarS {
+  height: 100vh;
+  background-color: #f8f9fa;
+  padding: 20px;
+}
+
+.sidebarS button {
+  width: 100%;
+  margin-bottom: 10px;
+  background: linear-gradient(135deg, #0097A7, #FFE082); /* turkuaz + sıcak sarı */
+
+}
+
+.content-areaS {
+  padding: 20px;
+  min-height: 100vh;
+  border-left: 1px solid #dee2e6;
+}
+
+
+.sidebar .btn-outline-primary:hover {
+  color: white !important;
+}
+
+.custom-container2 {
+  margin-top: 90px;
+  margin-right: 50px;
+  margin-left: 20px;
+  margin-bottom: 120px;
+  align-self: flex-start; /* sol tarafa yapışık */
+  width: 30%;
+}
