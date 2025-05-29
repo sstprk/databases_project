@@ -1,3 +1,4 @@
+@model realCabinly.Models.RegisterViewModel
 @{
     ViewData["Title"] = "Kayıt Ol";
     Layout = "~/Views/Shared/_Layout.cshtml"; // Ana layout'u kullanıyoruz
@@ -11,7 +12,7 @@
                     <h2 class="text-center mb-0"><i class="fas fa-user-plus me-2"></i>Yeni Hesap Oluştur</h2>
                 </div>
                 <div class="card-body p-4 p-md-5">
-                    <form asp-action="Register" asp-controller="Account" method="post">
+                    <form asp-controller="Account" asp-action="Register" method="post">
                         @* CSRF token için ValidateAntiForgeryToken attribute'u controller'da olduğundan burada @Html.AntiForgeryToken() gerekmez *@
                         
                         <div asp-validation-summary="All" class="text-danger mb-3"></div> @* Tüm hataları göster *@
@@ -36,6 +37,16 @@
                             <input type="password" name="confirmPassword" class="form-control form-control-lg" id="confirmPassword" placeholder="••••••••" required>
                         </div>
 
+                        <div class="form-group">
+                            <label asp-for="Role">Rolünüz</label>
+                            <select asp-for="Role" class="form-control">
+                                <option value="">Rol Seçiniz...</option>
+                                <option value="guest">Kullanıcı</option>
+                                <option value="host">Ev Sahibi</option>
+                            </select>
+                            <span asp-validation-for="Role" class="text-danger"></span>
+                        </div>
+
                         <div class="d-grid mb-3">
                             <button type="submit" class="btn btn-primary btn-lg"><i class="fas fa-check-circle me-2"></i>Kayıt Ol</button>
                         </div>
@@ -49,3 +60,7 @@
         </div>
     </div>
 </div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}

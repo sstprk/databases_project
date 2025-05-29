@@ -12,6 +12,7 @@ using Microsoft.Extensions.Configuration;
 using Npgsql;
 using System.Data;
 using Microsoft.AspNetCore.Authorization;
+using realCabinly.Models;
 
 namespace realCabinly.Controllers
 {
@@ -43,47 +44,64 @@ namespace realCabinly.Controllers
             {
                 if (string.IsNullOrEmpty(email) || string.IsNullOrEmpty(password))
                 {
-                    ModelState.AddModelError("", "Kullanıcı adı ve şifre gereklidir");
+                    ModelState.AddModelError("", "E-posta ve şifre gereklidir.");
                     return View();
                 }
 
                 string connectionString = _configuration.GetConnectionString("DefaultConnection");
                 bool isValidUser = false;
-
-                string query = $"SELECT password_hash FROM users WHERE Email = '{email}'";
-                _logger.LogInformation("Executing query: {Query}", query);
-
                 string dbPasswordHash = null;
+                string userRole = null;
+                int userId = 0;
+
+                string query = "SELECT id, password_hash, role FROM users WHERE lower(email) = lower(@Email)";
+                _logger.LogInformation("Executing query to get user details for email: {Email}. Query: {QueryText}", email, query);
 
                 await using (var connection = new NpgsqlConnection(connectionString))
                 {
                     await connection.OpenAsync();
+                    _logger.LogInformation("DB connection opened for login attempt for email: {Email}", email);
                     await using (var command = new NpgsqlCommand(query, connection))
                     {
-                        var result = await command.ExecuteScalarAsync();
-                        if (result != null)
+                        command.Parameters.AddWithValue("@Email", email);
+                        await using (var reader = await command.ExecuteReaderAsync())
                         {
-                            dbPasswordHash = result.ToString();
+                            if (await reader.ReadAsync())
+                            {
+                                userId = reader.GetInt32(0);
+                                dbPasswordHash = reader.IsDBNull(1) ? null : reader.GetString(1);
+                                userRole = reader.IsDBNull(2) ? null : reader.GetString(2);
+                                _logger.LogInformation("User found in DB for email: {Email}. UserID: {UserId}, Role: {UserRole}", email, userId, userRole);
+                            }
+                            else
+                            {
+                                _logger.LogWarning("User NOT found in DB for email: {Email}", email);
+                            }
                         }
                     }
                 }
 
-                // GÜVENLİK UYARISI: Şifreleri düz metin olarak saklamak ve karşılaştırmak SON DERECE GÜVENSİZDİR!
-                // Bu yöntem KESİNLİKLE üretim ortamlarında kullanılmamalıdır.
-                // Şifreler her zaman hash'lenerek saklanmalı ve hash'ler karşılaştırılmalıdır.
-                if (dbPasswordHash != null && dbPasswordHash == password) // Güncellendi: Doğrudan karşılaştırma
+                if (userId > 0 && dbPasswordHash != null && dbPasswordHash == password)
                 {
                     isValidUser = true;
                 }
 
-                _logger.LogInformation("isValidUser: {IsValidUser} for email: {Email} (DB Value: {DbValue})", isValidUser, email, dbPasswordHash);
+                _logger.LogInformation("Login validation: isValidUser={IsValidUser} for email: {Email} (UserID: {UserId})", isValidUser, email, userId);
 
                 if (isValidUser)
                 {
                     var claims = new List<Claim>
                     {
                         new Claim(ClaimTypes.Name, email),
+                        new Claim(ClaimTypes.NameIdentifier, userId.ToString()),
+                        new Claim(ClaimTypes.Role, userRole)
                     };
+
+                    _logger.LogInformation("Attempting to sign in user. Email: {Email}, UserID: {UserId}, Role: {UserRole}. Claims to be set:", email, userId, userRole);
+                    foreach(var claim in claims)
+                    {
+                        _logger.LogInformation("- Claim Type: {ClaimType}, Claim Value: {ClaimValue}", claim.Type, claim.Value);
+                    }
 
                     var identity = new ClaimsIdentity(claims, "MyCookieAuth");
                     var principal = new ClaimsPrincipal(identity);
@@ -95,15 +113,27 @@ namespace realCabinly.Controllers
                     };
 
                     await HttpContext.SignInAsync("MyCookieAuth", principal, authProperties);
-                    return RedirectToAction("Index", "Home");
+                    _logger.LogInformation("User {Email} (ID: {UserId}, Role: {UserRole}) signed in successfully.", email, userId, userRole);
+
+                    if (userRole == "host")
+                    {
+                        _logger.LogInformation("Redirecting to Host/hostPage for host user: {Email}", email);
+                        return RedirectToAction("hostPage", "Host");
+                    }
+                    else
+                    {
+                        _logger.LogInformation("Redirecting to Home/Index for non-host user: {Email} (Role: {UserRole})", email, userRole);
+                        return RedirectToAction("Index", "Home");
+                    }
                 }
 
-                ModelState.AddModelError("", "Geçersiz kullanıcı adı veya şifre");
+                ModelState.AddModelError("", "Geçersiz e-posta veya şifre.");
+                _logger.LogWarning("Login failed: Invalid credentials for email: {Email}", email);
                 return View();
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Login işlemi sırasında hata oluştu");
+                _logger.LogError(ex, "Login işlemi sırasında HATA oluştu for email: {Email}. Details: {ExceptionDetails}", email, ex.ToString());
                 ModelState.AddModelError("", "Giriş yapılırken bir hata oluştu. Lütfen daha sonra tekrar deneyin.");
                 return View();
             }
@@ -326,80 +356,96 @@ namespace realCabinly.Controllers
         // POST: /Account/Register
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Register(string name, string email, string password, string confirmPassword)
+        public async Task<IActionResult> Register(RegisterViewModel model)
         {
-            if (User.Identity.IsAuthenticated)
+            _logger.LogInformation("Register POST metodu çağrıldı. Email: {Email}, Role: {Role}", model.Email, model.Role);
+
+            if (model.Password != model.ConfirmPassword)
             {
-                return RedirectToAction("Index", "Home");
+                ModelState.AddModelError("ConfirmPassword", "Şifreler eşleşmiyor.");
+                _logger.LogWarning("Şifreler eşleşmiyor. Email: {Email}", model.Email);
             }
 
-            if (string.IsNullOrEmpty(name) || string.IsNullOrEmpty(email) || string.IsNullOrEmpty(password) || string.IsNullOrEmpty(confirmPassword))
+            if (model.Role != "guest" && model.Role != "host")
             {
-                ModelState.AddModelError("", "Tüm alanlar doldurulmalıdır.");
-                return View();
+                ModelState.AddModelError("Role", "Geçersiz rol seçimi. 'guest' veya 'host' olmalıdır.");
+                _logger.LogWarning("Geçersiz rol seçimi: {Role}. Beklenen 'guest' veya 'host'. Email: {Email}", model.Role, model.Email);
             }
 
-            if (password != confirmPassword)
+            if (ModelState.IsValid)
             {
-                ModelState.AddModelError("", "Şifreler eşleşmiyor.");
-                return View();
-            }
-
-            string connectionString = _configuration.GetConnectionString("DefaultConnection");
-            string emailExistsQuery = "SELECT COUNT(1) FROM users WHERE Email = @Email";
-            bool emailExists = false;
-
-            try
-            {
-                await using (var connection = new NpgsqlConnection(connectionString))
+                try
                 {
-                    await connection.OpenAsync();
-                    await using (var command = new NpgsqlCommand(emailExistsQuery, connection))
+                    string connectionString = _configuration.GetConnectionString("DefaultConnection");
+                    using (NpgsqlConnection connection = new NpgsqlConnection(connectionString))
                     {
-                        command.Parameters.AddWithValue("@Email", email);
-                        emailExists = Convert.ToInt32(await command.ExecuteScalarAsync()) > 0;
+                        await connection.OpenAsync();
+                        _logger.LogInformation("Veritabanı bağlantısı açıldı (Register). Email: {Email}", model.Email);
+
+                        // Email'in zaten var olup olmadığını kontrol et
+                        string checkUserSql = "SELECT COUNT(1) FROM users WHERE LOWER(email) = LOWER(@Email)";
+                        using (NpgsqlCommand checkCmd = new NpgsqlCommand(checkUserSql, connection))
+                        {
+                            checkCmd.Parameters.AddWithValue("@Email", model.Email.ToLower());
+                            var userExists = (long)await checkCmd.ExecuteScalarAsync();
+                            if (userExists > 0)
+                            {
+                                ModelState.AddModelError("Email", "Bu e-posta adresi zaten kayıtlı.");
+                                _logger.LogWarning("Kayıt denemesi başarısız - E-posta zaten var: {Email}", model.Email);
+                                return View(model);
+                            }
+                        }
+
+                        // !!! GÜVENLİK UYARISI: ŞİFREYİ HASH'LEYİN !!!
+                        string passwordToStore = model.Password;
+
+                        // created_at veritabanı tarafından DEFAULT olarak ayarlandığı için sorgudan çıkarıldı.
+                        // Sütun isimleri küçük harfe çevrildi (email, password_hash, role).
+                        string sql = "INSERT INTO users (name, email, password_hash, role) VALUES (@Name, @Email, @PasswordHash, @Role)";
+                        _logger.LogInformation("Çalıştırılacak SQL (Register): {SQLQuery}", sql);
+
+                        using (NpgsqlCommand command = new NpgsqlCommand(sql, connection))
+                        {
+                            command.Parameters.AddWithValue("@Name", model.Name);
+                            command.Parameters.AddWithValue("@Email", model.Email);
+                            command.Parameters.AddWithValue("@PasswordHash", passwordToStore);
+                            command.Parameters.AddWithValue("@Role", model.Role);
+
+                            int rowsAffected = await command.ExecuteNonQueryAsync();
+                            _logger.LogInformation("ExecuteNonQueryAsync çalıştı (Register). Etkilenen satır sayısı: {RowsAffected}. Email: {Email}", rowsAffected, model.Email);
+
+                            if (rowsAffected > 0)
+                            {
+                                _logger.LogInformation("Kullanıcı başarıyla kaydedildi: {Email}, Rol: {Role}. Login sayfasına yönlendiriliyor.", model.Email, model.Role);
+                                TempData["RegistrationSuccessMessage"] = "Kaydınız başarıyla oluşturuldu. Şimdi giriş yapabilirsiniz.";
+                                return RedirectToAction("Login", "Account"); // Yönlendirme AccountController'daki Login'e yapıldı
+                            }
+                            else
+                            {
+                                _logger.LogWarning("Veritabanına kullanıcı kaydı yapılamadı (etkilenen satır 0). Email: {Email}", model.Email);
+                                ModelState.AddModelError("", "Kullanıcı kaydedilemedi. Lütfen tekrar deneyin.");
+                            }
+                        }
                     }
                 }
-
-                if (emailExists)
+                catch (Exception ex)
                 {
-                    ModelState.AddModelError("", "Bu e-posta adresi zaten kullanılıyor.");
-                    return View();
+                    _logger.LogError(ex, "Kullanıcı kaydı sırasında HATA oluştu: {Email}. Detaylar: {ExceptionDetails}", model.Email, ex.ToString());
+                    ModelState.AddModelError("", "Kayıt sırasında bir veritabanı hatası oluştu. Lütfen daha sonra tekrar deneyin.");
                 }
-
-                // Kullanıcı adı (name) kolonunun veritabanındaki adının 'name' (küçük harf) olduğunu varsayıyoruz.
-                // Kullanıcı tarafından yapılan son değişikliğe göre güncellendi.
-                string insertUserQuery = "INSERT INTO users (name, Email, password_hash) VALUES (@Name, @Email, @Password)";
-                int rowsAffected = 0;
-                await using (var connection = new NpgsqlConnection(connectionString))
+            }
+            else
+            {
+                _logger.LogWarning("ModelState geçerli değil (Register). Email: {Email}", model.Email);
+                foreach (var entry in ModelState)
                 {
-                    await connection.OpenAsync();
-                    await using (var command = new NpgsqlCommand(insertUserQuery, connection))
+                    foreach (var error in entry.Value.Errors)
                     {
-                        command.Parameters.AddWithValue("@Name", name);
-                        command.Parameters.AddWithValue("@Email", email);
-                        command.Parameters.AddWithValue("@Password", password);
-                        rowsAffected = await command.ExecuteNonQueryAsync();
+                        _logger.LogWarning("- Anahtar: {Key}, Hata: {ErrorMessage} (Register)", entry.Key, error.ErrorMessage);
                     }
                 }
-
-                if (rowsAffected > 0)
-                {
-                    TempData["RegistrationSuccessMessage"] = "Kaydınız başarıyla oluşturuldu. Şimdi giriş yapabilirsiniz.";
-                    return RedirectToAction("Login");
-                }
-                else
-                {
-                    ModelState.AddModelError("", "Kayıt sırasında bir hata oluştu. Lütfen tekrar deneyin.");
-                }
             }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "Register POST sırasında veritabanı hatası.");
-                ModelState.AddModelError("", "Kayıt sırasında beklenmedik bir sunucu hatası oluştu.");
-            }
-
-            return View();
+            return View(model);
         }
 
         [HttpGet]
@@ -407,5 +453,29 @@ namespace realCabinly.Controllers
         {
             return View();
         }
+    }
+}
+
+namespace realCabinly.Models
+{
+    public class RegisterViewModel
+    {
+        [System.ComponentModel.DataAnnotations.Required(ErrorMessage = "Adınız gereklidir.")]
+        public string Name { get; set; }
+
+        [System.ComponentModel.DataAnnotations.Required(ErrorMessage = "E-posta adresi gereklidir.")]
+        [System.ComponentModel.DataAnnotations.EmailAddress(ErrorMessage = "Geçerli bir e-posta adresi giriniz.")]
+        public string Email { get; set; }
+
+        [System.ComponentModel.DataAnnotations.Required(ErrorMessage = "Şifre gereklidir.")]
+        [System.ComponentModel.DataAnnotations.DataType(System.ComponentModel.DataAnnotations.DataType.Password)]
+        public string Password { get; set; }
+
+        [System.ComponentModel.DataAnnotations.DataType(System.ComponentModel.DataAnnotations.DataType.Password)]
+        [System.ComponentModel.DataAnnotations.Compare("Password", ErrorMessage = "Şifreler eşleşmiyor.")]
+        public string ConfirmPassword { get; set; }
+
+        [System.ComponentModel.DataAnnotations.Required(ErrorMessage = "Rol seçimi gereklidir.")]
+        public string Role { get; set; } // user ya da host
     }
 }

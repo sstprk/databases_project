@@ -1,0 +1,134 @@
+@model realCabinly.Controllers.AdEditViewModel
+@{
+    Layout = "~/Views/Shared/_Layout2.cshtml";
+    ViewData["Title"] = "İlanı Düzenle";
+}
+
+<div class="container mt-4">
+    <h2>@ViewData["Title"]: @Model.Title</h2>
+    <hr />
+
+    @* Fotoğraf seçmeden değişiklik kaydedince myadse yönlendirmiyorum oraya bakılacak! *@
+    <form asp-action="EditAd" method="post" enctype="multipart/form-data">
+        @Html.AntiForgeryToken()
+        <input type="hidden" asp-for="Id" />
+        <input type="hidden" asp-for="CurrentCoverImageUrl" />
+
+        <div class="row">
+            <div class="col-md-8">
+                <div asp-validation-summary="ModelOnly" class="alert alert-danger"></div>
+
+                <div class="form-group mb-3">
+                    <label asp-for="Title" class="control-label"></label>
+                    <input asp-for="Title" class="form-control" />
+                    <span asp-validation-for="Title" class="text-danger"></span>
+                </div>
+
+                <div class="form-group mb-3">
+                    <label asp-for="Description" class="control-label"></label>
+                    <textarea asp-for="Description" class="form-control" rows="5"></textarea>
+                    <span asp-validation-for="Description" class="text-danger"></span>
+                </div>
+
+                <div class="form-group mb-3">
+                    <label asp-for="Location" class="control-label"></label>
+                    <input asp-for="Location" class="form-control" />
+                    <span asp-validation-for="Location" class="text-danger"></span>
+                </div>
+
+                <div class="form-group mb-3">
+                    <label asp-for="PricePerNight" class="control-label"></label>
+                    <input asp-for="PricePerNight" type="number" step="0.01" class="form-control" />
+                    <span asp-validation-for="PricePerNight" class="text-danger"></span>
+                </div>
+
+                <div class="form-group form-check mb-3">
+                    <input class="form-check-input" type="checkbox" asp-for="IsActive" />
+                    <label class="form-check-label" asp-for="IsActive">
+                        İlan Aktif Mi?
+                    </label>
+                </div>
+            </div>
+
+            <div class="col-md-4">
+                <div class="card">
+                    <div class="card-header">
+                        Kapak Resmi
+                    </div>
+                    <div class="card-body text-center">
+                        @{
+                            string currentImagePath = Model.CurrentCoverImageUrl;
+                            if (string.IsNullOrEmpty(currentImagePath) || currentImagePath == "~") // ~ gelme ihtimaline karşı da kontrol
+                            {
+                                currentImagePath = "/images/default-ad-image.png"; 
+                            }
+                            else if (currentImagePath.StartsWith("~/")) // Eğer zaten ~/ ile başlıyorsa dokunma
+                            {
+                                // Correctly formatted, do nothing
+                            }
+                            else if (!currentImagePath.StartsWith("/")) 
+                            {
+                                currentImagePath = "/" + currentImagePath; 
+                            }
+                            // Eğer sadece /images... ise başına ~ eklenmeli, eğer ~/images... ise Url.Content onu halleder.
+                            // Url.Content için en güvenli format ~/ ile başlayanlar.
+                            if (!currentImagePath.StartsWith("~/") && currentImagePath.StartsWith("/"))
+                            {
+                                currentImagePath = "~" + currentImagePath;
+                            }
+                            else if (!currentImagePath.StartsWith("~") && !currentImagePath.StartsWith("/")) 
+                            {
+                                // Bu durum yukarıda / eklenerek handle edilmiş olmalı ama yine de bir kontrol
+                                currentImagePath = "~/" + currentImagePath; 
+                            }
+                        }
+                        <img id="currentImage" src="@Url.Content(currentImagePath)" alt="Mevcut Kapak Resmi" class="img-fluid rounded mb-2" style="max-height: 200px;" onerror="this.onerror=null; this.src='@Url.Content("~/images/default-ad-image.png")';" />
+                        <p><small>Mevcut Kapak Resmi</small></p>
+                        
+                        <div class="form-group mb-2">
+                            <label asp-for="NewImage" class="form-label">Yeni Kapak Resmi Yükle (Opsiyonel)</label>
+                            <input asp-for="NewImage" type="file" class="form-control" accept="image/png, image/jpeg, image/gif" onchange="previewImage(event)" data-val="false">
+                            <small class="form-text text-muted">Sadece .png, .jpg, .gif dosyaları. Değiştirmek istemiyorsanız boş bırakın.</small>
+                        </div>
+                        <img id="imagePreview" src="#" alt="Yeni Resim Önizlemesi" class="img-fluid rounded mt-2" style="max-height: 180px; display: none;" />
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="form-group mt-4">
+            <button type="submit" class="btn btn-success">
+                <i class="fas fa-save"></i> Değişiklikleri Kaydet
+            </button>
+            <a asp-action="myAds" class="btn btn-secondary">
+                <i class="fas fa-times"></i> İptal
+            </a>
+        </div>
+    </form>
+</div>
+
+@section Scripts {
+    @{await Html.RenderPartialAsync("_ValidationScriptsPartial");}
+    <script>
+        function previewImage(event) {
+            var reader = new FileReader();
+            var imageField = document.getElementById("imagePreview");
+            var currentImageField = document.getElementById("currentImage");
+            
+            reader.onload = function(){
+                if (reader.readyState === 2) {
+                    imageField.src = reader.result;
+                    imageField.style.display = 'block';
+                    if (currentImageField) currentImageField.style.display = 'none'; // Yeni resim seçilince mevcut resmi gizle
+                }
+            }
+            if(event.target.files[0]){
+                reader.readAsDataURL(event.target.files[0]);
+            } else {
+                imageField.src = "#";
+                imageField.style.display = 'none';
+                 if (currentImageField) currentImageField.style.display = 'block'; // Seçim kaldırılırsa mevcut resmi geri göster
+            }
+        }
+    </script>
+} 
