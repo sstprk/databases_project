@@ -145,7 +145,7 @@ namespace realCabinly.Controllers
             try
             {
                 await HttpContext.SignOutAsync("MyCookieAuth");
-                return RedirectToAction("Login");
+                return RedirectToAction("Index", "Home");
             }
             catch (Exception ex)
             {
@@ -156,10 +156,58 @@ namespace realCabinly.Controllers
 
         [Authorize]
         [HttpGet]
-        public IActionResult Settings()
+        public async Task<IActionResult> Settings()
         {
-            // İleride kullanıcı ayarlarıyla ilgili model verisi buraya eklenebilir.
-            return View();
+            var userIdString = User.FindFirstValue(ClaimTypes.NameIdentifier);
+            if (string.IsNullOrEmpty(userIdString) || !int.TryParse(userIdString, out int userId))
+            {
+                _logger.LogWarning("Account/Settings GET: Kullanıcı kimliği alınamadı veya geçersiz.");
+                return RedirectToAction("Login", "Account");
+            }
+
+            string userName = null;
+            string userEmail = User.FindFirstValue(ClaimTypes.Email);
+            string userRole = null;
+            DateTime? createdAt = null;
+
+            string connectionString = _configuration.GetConnectionString("DefaultConnection");
+            try
+            {
+                await using (var connection = new NpgsqlConnection(connectionString))
+                {
+                    await connection.OpenAsync();
+                    string query = "SELECT name, role, created_at FROM users WHERE id = @UserId";
+                    await using (var command = new NpgsqlCommand(query, connection))
+                    {
+                        command.Parameters.AddWithValue("@UserId", userId);
+                        await using (var reader = await command.ExecuteReaderAsync())
+                        {
+                            if (await reader.ReadAsync())
+                            {
+                                userName = reader.IsDBNull(reader.GetOrdinal("name")) ? null : reader.GetString(reader.GetOrdinal("name"));
+                                userRole = reader.IsDBNull(reader.GetOrdinal("role")) ? null : reader.GetString(reader.GetOrdinal("role"));
+                                createdAt = reader.IsDBNull(reader.GetOrdinal("created_at")) ? (DateTime?)null : reader.GetDateTime(reader.GetOrdinal("created_at"));
+                            }
+                        }
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Account/Settings GET: Kullanıcı adı çekilirken hata oluştu. UserId: {UserId}", userId);
+                ViewBag.ProfileUpdateMessage = "Kullanıcı bilgileri yüklenirken bir hata oluştu.";
+                ViewBag.ProfileUpdateSuccess = false;
+            }
+
+            var model = new UserSettingsViewModel
+            {
+                Name = userName
+            };
+            ViewBag.UserEmail = userEmail;
+            ViewBag.UserRole = userRole;
+            ViewBag.UserCreatedAt = createdAt?.ToString("dd MMMM yyyy, HH:mm") ?? "Bilgi yok";
+
+            return View(model);
         }
 
         [Authorize]
@@ -452,6 +500,85 @@ namespace realCabinly.Controllers
         public IActionResult AccessDenied()
         {
             return View();
+        }
+
+        [Authorize]
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> UpdateProfile(UserSettingsViewModel model)
+        {
+            ViewBag.UserEmail = User.FindFirstValue(ClaimTypes.Email); // E-postayı her zaman view'a gönder
+
+            if (!ModelState.IsValid)
+            {
+                _logger.LogWarning("Account/UpdateProfile POST: ModelState geçerli değil.");
+                ViewBag.ProfileUpdateMessage = "Lütfen adınızı doğru şekilde girin.";
+                ViewBag.ProfileUpdateSuccess = false;
+                // ModelState hatalarını da göstermek için Settings view'ını model ile döndür
+                return View("Settings", model); 
+            }
+
+            var userIdString = User.FindFirstValue(ClaimTypes.NameIdentifier);
+            if (string.IsNullOrEmpty(userIdString) || !int.TryParse(userIdString, out int userId))
+            {
+                _logger.LogWarning("Account/UpdateProfile POST: Kullanıcı kimliği alınamadı veya geçersiz.");
+                ViewBag.ProfileUpdateMessage = "Oturumunuzla ilgili bir sorun oluştu. Lütfen tekrar giriş yapın.";
+                ViewBag.ProfileUpdateSuccess = false;
+                return View("Settings", model); 
+            }
+
+            string connectionString = _configuration.GetConnectionString("DefaultConnection");
+            try
+            {
+                await using (var connection = new NpgsqlConnection(connectionString))
+                {
+                    await connection.OpenAsync();
+                    string query = "UPDATE users SET name = @Name WHERE id = @UserId";
+                    await using (var command = new NpgsqlCommand(query, connection))
+                    {
+                        command.Parameters.AddWithValue("@Name", model.Name);
+                        command.Parameters.AddWithValue("@UserId", userId);
+                        int rowsAffected = await command.ExecuteNonQueryAsync();
+
+                        if (rowsAffected > 0)
+                        {
+                            _logger.LogInformation("Account/UpdateProfile POST: Kullanıcı {UserId} adı başarıyla güncellendi: {Name}", userId, model.Name);
+                            ViewBag.ProfileUpdateMessage = "Adınız başarıyla güncellendi.";
+                            ViewBag.ProfileUpdateSuccess = true;
+                            // Kullanıcının cookie'sindeki Name claim'ini güncellemek için (eğer varsa ve kullanılıyorsa):
+                            // Mevcut claim'leri al
+                            var claimsPrincipal = User;
+                            var identity = claimsPrincipal.Identity as ClaimsIdentity;
+                            if (identity != null)
+                            {
+                                var nameClaim = identity.FindFirst(ClaimTypes.Name);
+                                if (nameClaim != null && nameClaim.Value != model.Name) // Sadece gerçekten değiştiyse güncelle
+                                {
+                                    identity.RemoveClaim(nameClaim);
+                                    identity.AddClaim(new Claim(ClaimTypes.Name, model.Name));
+                                    // Güncellenmiş kimlikle tekrar oturum aç
+                                    await HttpContext.SignInAsync("MyCookieAuth", new ClaimsPrincipal(identity));
+                                    _logger.LogInformation("Account/UpdateProfile POST: User's Name claim updated in cookie.");
+                                }
+                            }
+                        }
+                        else
+                        {
+                            _logger.LogWarning("Account/UpdateProfile POST: Kullanıcı {UserId} için ad güncellenirken kayıt bulunamadı veya değişiklik olmadı.", userId);
+                            ViewBag.ProfileUpdateMessage = "Adınız güncellenirken bir sorun oluştu veya mevcut adınızla aynı.";
+                            ViewBag.ProfileUpdateSuccess = false;
+                        }
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Account/UpdateProfile POST: Kullanıcı adı güncellenirken hata oluştu. UserId: {UserId}", userId);
+                ViewBag.ProfileUpdateMessage = "Adınız güncellenirken bir veritabanı hatası oluştu.";
+                ViewBag.ProfileUpdateSuccess = false;
+            }
+            // Her durumda Settings view'ını model ile ve güncel ViewBag mesajlarıyla döndür
+            return View("Settings", model);
         }
     }
 }

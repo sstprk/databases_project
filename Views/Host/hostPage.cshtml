@@ -9,12 +9,12 @@
     <div class="row">
       <!-- Sol Menü -->
       <div class="col-md-3 sidebarS">
-        <button  class="btn-login" onclick="loadContent('myAds')"> <a asp-controller="Host" asp-action="myAds"> İlanlarım</a></button>
-        <button class="btn-login" onclick="loadContent('activeReservations')"> <a asp-controller="Host" asp-action="activeReservations">Aktif Rezervasyonlarım</a></button>
-        <button class="btn-login" onclick="loadContent('reservationHistory')"> <a asp-controller="Host" asp-action="reservationHistory">Geçmiş Rezervasyonlarım</a></button>
-        <button class="btn-login" onclick="loadContent('newAd')"> <a asp-controller="Host" asp-action="newAd">Yeni İlan Ver </a></button>
-        <button class="btn-login" onclick="loadContent('settings')"> <a asp-controller="Host" asp-action="settings">Ayarlar</a></button>
-        <button class="btn-login" id="btn-quit">Çıkış Yap</button>
+        <button class="btn-login" onclick="window.location.href='@Url.Action("myAds", "Host")'">İlanlarım</button>
+        <button class="btn-login" onclick="window.location.href='@Url.Action("activeReservations", "Host")'">Aktif Rezervasyonlarım</button>
+        <button class="btn-login" onclick="window.location.href='@Url.Action("reservationHistory", "Host")'">Geçmiş Rezervasyonlarım</button>
+        <button class="btn-login" onclick="window.location.href='@Url.Action("newAd", "Host")'">Yeni İlan Ver</button>
+        <button class="btn-login" onclick="window.location.href='@Url.Action("settings", "Host")'">Ayarlar</button>
+        <button class="btn-login" id="btn-quit" onclick="window.location.href='@Url.Action("Logout", "Account")'">Çıkış Yap</button>
 
       </div>
 

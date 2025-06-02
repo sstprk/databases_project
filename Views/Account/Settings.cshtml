@@ -1,89 +1,72 @@
+@model realCabinly.Models.UserSettingsViewModel
 @{
-    ViewData["Title"] = "Kullanıcı Ayarları";
-    Layout = "~/Views/Shared/_Layout.cshtml";
+    Layout = "~/Views/Shared/_Layout2.cshtml";
+    ViewData["Title"] = "Hesap Ayarları";
 }
 
-<div class="container mt-4 mb-5">
-    <div class="row justify-content-center">
-        <div class="col-lg-10 col-md-10">
-            
-            <hr>
-            <hr>
-            <hr>
-            
-            <div class="row">
-                <div class="col-lg-6 mb-4 mb-lg-0">
-                    <!-- E-posta Değiştirme Kartı -->
-                    <div class="card shadow-sm h-100">
-                        <div class="card-header bg-light py-3">
-                            <h4 class="mb-0"><i class="fas fa-envelope me-2"></i>E-posta Adresini Değiştir</h4>
-                        </div>
-                        <div class="card-body p-md-5 p-4 d-flex flex-column">
-                            @if (ViewBag.EmailChangeMessage != null)
-                            {
-                                <div class="alert @(ViewBag.EmailChangeSuccess == true ? "alert-success" : "alert-danger") d-flex align-items-center" role="alert">
-                                    <i class="fas @(ViewBag.EmailChangeSuccess == true ? "fa-check-circle" : "fa-exclamation-triangle") me-2"></i>
-                                    <div>
-                                        @ViewBag.EmailChangeMessage
-                                    </div>
-                                </div>
-                            }
-                            <form asp-action="ChangeEmail" asp-controller="Account" method="post" class="mt-auto">
-                                <div asp-validation-summary="ModelOnly" class="text-danger mb-3"></div>
-                                <div class="mb-3">
-                                    <label for="currentPasswordForEmail" class="form-label fw-semibold">Mevcut E-posta Adresiniz</label>
-                                    <input type="password" name="currentPassword" class="form-control form-control-lg" id="currentPasswordForEmail" placeholder="••••••••" required>
-                                </div>
-                                <div class="mb-3">
-                                    <label for="newEmail" class="form-label fw-semibold">Yeni E-posta Adresi</label>
-                                    <input type="email" name="newEmail" class="form-control form-control-lg" id="newEmail" placeholder="ornek@mail.com" required>
-                                </div>
-                                <div class="d-grid">
-                                    <button type="submit" class="btn btn-primary btn-lg"><i class="fas fa-save me-2"></i>E-postayı Kaydet</button>
-                                </div>
-                            </form>
-                        </div>
-                    </div>
+<div class="container py-4">
+    <h3 class="mb-4">@ViewData["Title"]</h3>
+
+    @if (TempData["SuccessMessage"] != null)
+    {
+        <div class="alert alert-success" role="alert">
+            @TempData["SuccessMessage"]
+        </div>
+    }
+    @if (TempData["ErrorMessage"] != null)
+    {
+        <div class="alert alert-danger" role="alert">
+            @TempData["ErrorMessage"]
+        </div>
+    }
+
+    <div class="row justify-content-center" style="margin-top: 100px; border: 1px solid #ccc; padding: 20px; border-radius: 10px;width: 50cqi;" >
+        <div class="col-md-8">
+            <!-- Kullanıcı Bilgileri Güncelleme -->
+            <h5>Profil Bilgileri</h5>
+            <form asp-action="UpdateSettings" asp-controller="Host" method="post">
+                @Html.AntiForgeryToken()
+                <div asp-validation-summary="ModelOnly" class="text-danger mb-3"></div>
+
+                <div class="mb-3">
+                    <label asp-for="Name" class="form-label"></label>
+                    <input asp-for="Name" class="form-control" />
+                    <span asp-validation-for="Name" class="text-danger"></span>
                 </div>
 
-                <div class="col-lg-6">
-                    <!-- Şifre Değiştirme Kartı -->
-                    <div class="card shadow-sm h-100">
-                        <div class="card-header bg-light py-3">
-                            <h4 class="mb-0"><i class="fas fa-key me-2"></i>Şifreyi Değiştir</h4>
-                        </div>
-                        <div class="card-body p-md-5 p-4 d-flex flex-column">
-                            @if (ViewBag.PasswordChangeMessage != null)
-                            {
-                                <div class="alert @(ViewBag.PasswordChangeSuccess == true ? "alert-success" : "alert-danger") d-flex align-items-center" role="alert">
-                                    <i class="fas @(ViewBag.PasswordChangeSuccess == true ? "fa-check-circle" : "fa-exclamation-triangle") me-2"></i>
-                                    <div>
-                                        @ViewBag.PasswordChangeMessage
-                                    </div>
-                                </div>
-                            }
-                            <form asp-action="ChangePassword" asp-controller="Account" method="post" class="mt-auto">
-                                <div asp-validation-summary="ModelOnly" class="text-danger mb-3"></div>
-                                <div class="mb-3">
-                                    <label for="currentPassword" class="form-label fw-semibold">Mevcut Şifreniz</label>
-                                    <input type="password" name="currentPassword" class="form-control form-control-lg" id="currentPassword" placeholder="••••••••" required>
-                                </div>
-                                <div class="mb-3">
-                                    <label for="newPassword" class="form-label fw-semibold">Yeni Şifre</label>
-                                    <input type="password" name="newPassword" class="form-control form-control-lg" id="newPassword" placeholder="Yeni şifrenizi girin" required>
-                                </div>
-                                <div class="mb-3">
-                                    <label for="confirmNewPassword" class="form-label fw-semibold">Yeni Şifre (Tekrar)</label>
-                                    <input type="password" name="confirmNewPassword" class="form-control form-control-lg" id="confirmNewPassword" placeholder="Yeni şifrenizi tekrar girin" required>
-                                </div>
-                                <div class="d-grid">
-                                    <button type="submit" class="btn btn-primary btn-lg"><i class="fas fa-save me-2"></i>Şifreyi Kaydet</button>
-                                </div>
-                            </form>
-                        </div>
-                    </div>
+               
+
+                <button type="submit" class="btn-login">Bilgileri Kaydet</button>
+            </form>
+
+            <hr class="my-4" />
+
+            <!-- Şifre Güncelleme (Bu kısım AccountController altında yönetilmeli) -->
+            <h5>Şifre Güncelle</h5>
+
+            @* Şifre güncelleme formu (Mevcut haliyle bırakılabilir veya Account/Settings'e yönlendirilebilir) *@
+            <form asp-controller="Account" asp-action="ChangePassword" method="post"> <!-- AccountController'a yönlendirme örneği -->
+                 @Html.AntiForgeryToken()
+                <div class="mb-3">
+                    <label for="sifreEski" class="form-label">Mevcut Şifre</label>
+                    <input type="password" name="currentPassword" class="form-control" id="sifreEski" />
                 </div>
-            </div>
+
+                <div class="mb-3">
+                    <label for="sifreYeni" class="form-label">Yeni Şifre</label>
+                    <input type="password" name="newPassword" class="form-control" id="sifreYeni" />
+                </div>
+
+                <div class="mb-3">
+                    <label for="sifreYeniTekrar" class="form-label">Yeni Şifre (Tekrar)</label>
+                    <input type="password" name="confirmNewPassword" class="form-control" id="sifreYeniTekrar" />
+                </div>
+                <button type="submit" class="btn-login">Şifreyi Değiştir</button>
+            </form>
         </div>
     </div>
 </div>
+
+@section Scripts {
+    @{await Html.RenderPartialAsync("_ValidationScriptsPartial");}
+}

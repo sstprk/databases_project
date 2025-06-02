@@ -13,9 +13,23 @@ using System.Linq;
 using Microsoft.AspNetCore.Authentication;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations; // DataAnnotations için eklendi
-// using realCabinly.Models; // Kaldırıldı, Ilan sınıfı aşağıya eklendi.
+using Microsoft.AspNetCore.Authorization; // AuthorizeAttribute için eklendi
+using realCabinly.Models; // UserSettingsViewModel ve Ilan (eğer o da taşınırsa) için eklendi
+// using realCabinly.Models; // Kaldırıldı, Ilan sınıfı aşağıya eklendi. - Bu satır fazlalık, kaldırılacak
 
 namespace realCabinly.Controllers;
+
+// Kullanıcı Ayarları için ViewModel - BU KISIM TAŞINACAK/SİLİNECEK
+// public class UserSettingsViewModel
+// {
+//     [Required(ErrorMessage = "Ad ve soyad gereklidir.")]
+//     [Display(Name = "Ad Soyad")]
+//     public string Name { get; set; }
+//
+//     // E-posta ve diğer hassas bilgiler genellikle AccountController altında yönetilir.
+//     // Şimdilik sadece Name alanını ekliyoruz.
+//     // public string Email { get; set; } // Eğer e-postayı da burada göstermek isterseniz.
+// }
 
 // Ilan sınıfını geçici olarak buraya taşıyoruz, linter hatasını çözmek için.
 // İDEALDE BU SINIF Models/Ilan.cs DOSYASINDA VE realCabinly.Models NAMESPACE'İNDE OLMALIDIR.
@@ -540,7 +554,8 @@ public class HostController : Controller
                 else
                 {
                     // Yeni resim yüklenmediyse mevcut resim URL'sini koru
-                    newRelativeImagePath = model.CurrentCoverImageUrl; 
+                    newRelativeImagePath = currentDbCoverImageUrl;
+                    model.CurrentCoverImageUrl = currentDbCoverImageUrl; // ViewModel'deki mevcut URL'yi de güncelle
                 }
 
                 // listings tablosunu güncelle
@@ -626,9 +641,255 @@ public class HostController : Controller
         }
     }
 
-    public IActionResult settings()
+    [HttpPost]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> DeleteAdConfirmed(int id)
     {
-        return View();
+        _logger.LogInformation("DeleteAdConfirmed POST çağrıldı. Silinecek İlan ID: {ListingId}", id);
+        var userIdString = User.FindFirstValue(ClaimTypes.NameIdentifier);
+        if (string.IsNullOrEmpty(userIdString) || !int.TryParse(userIdString, out int currentUserId))
+        {
+            _logger.LogWarning("DeleteAdConfirmed POST: Kullanıcı kimliği alınamadı veya geçersiz.");
+            TempData["ErrorMessage"] = "İşlem için oturum açmış olmanız gerekmektedir.";
+            return RedirectToAction(nameof(myAds)); // veya Login
+        }
+
+        string connectionString = _configuration.GetConnectionString("DefaultConnection");
+        NpgsqlTransaction transaction = null;
+        List<string> imagePathsToDelete = new List<string>();
+
+        try
+        {
+            using (NpgsqlConnection connection = new NpgsqlConnection(connectionString))
+            {
+                await connection.OpenAsync();
+                transaction = await connection.BeginTransactionAsync();
+
+                // İlanın kullanıcıya ait olup olmadığını ve var olup olmadığını kontrol et
+                int dbUserId = 0;
+                using (var checkCmd = new NpgsqlCommand("SELECT user_id FROM listings WHERE id = @id", connection, transaction))
+                {
+                    checkCmd.Parameters.AddWithValue("@id", id);
+                    var result = await checkCmd.ExecuteScalarAsync();
+                    if (result != null && result != DBNull.Value)
+                    {
+                        dbUserId = Convert.ToInt32(result);
+                    }
+                    else
+                    {
+                        _logger.LogWarning("DeleteAdConfirmed POST: Silinmek istenen ilan ({ListingId}) bulunamadı.", id);
+                        TempData["ErrorMessage"] = "Silinmek istenen ilan bulunamadı.";
+                        await transaction.RollbackAsync();
+                        return RedirectToAction(nameof(myAds));
+                    }
+                }
+
+                if (dbUserId != currentUserId)
+                {
+                    _logger.LogWarning("DeleteAdConfirmed POST: Kullanıcı {UserId}, kendisine ait olmayan ilanı ({ListingId}) silmeye çalıştı.", currentUserId, id);
+                    TempData["ErrorMessage"] = "Bu ilanı silme yetkiniz yok.";
+                    await transaction.RollbackAsync();
+                    return RedirectToAction(nameof(myAds));
+                }
+
+                // İlişkili fotoğrafların yollarını al ve diskten silmek üzere listeye ekle
+                using (var photoCmd = new NpgsqlCommand("SELECT image_url FROM photos WHERE listing_id = @listing_id", connection, transaction))
+                {
+                    photoCmd.Parameters.AddWithValue("@listing_id", id);
+                    using (var reader = await photoCmd.ExecuteReaderAsync())
+                    {
+                        while (await reader.ReadAsync())
+                        {
+                            if (!reader.IsDBNull(0))
+                            {
+                                string relativeImagePath = reader.GetString(0);
+                                if (!string.IsNullOrEmpty(relativeImagePath) && relativeImagePath != "/images/default-ad-image.png")
+                                {
+                                    imagePathsToDelete.Add(Path.Combine(_webHostEnvironment.WebRootPath, relativeImagePath.TrimStart('/')));
+                                }
+                            }
+                        }
+                    } // reader burada dispose edilecek
+                }
+
+
+                // Photos tablosundan kayıtları sil
+                using (var deletePhotosCmd = new NpgsqlCommand("DELETE FROM photos WHERE listing_id = @listing_id", connection, transaction))
+                {
+                    deletePhotosCmd.Parameters.AddWithValue("@listing_id", id);
+                    int photosDeletedCount = await deletePhotosCmd.ExecuteNonQueryAsync();
+                    _logger.LogInformation("DeleteAdConfirmed POST: {Count} fotoğraf kaydı silindi (İlan ID: {ListingId}).", photosDeletedCount, id);
+                }
+
+                // Listings tablosundan ilanı sil
+                using (var deleteListingCmd = new NpgsqlCommand("DELETE FROM listings WHERE id = @id", connection, transaction))
+                {
+                    deleteListingCmd.Parameters.AddWithValue("@id", id);
+                    int listingDeletedCount = await deleteListingCmd.ExecuteNonQueryAsync();
+                    if (listingDeletedCount == 0)
+                    {
+                        // Bu durum yukarıdaki kontrolle zaten yakalanmış olmalı ama yine de bir güvenlik önlemi.
+                        _logger.LogWarning("DeleteAdConfirmed POST: listings tablosunda silinecek kayıt bulunamadı. İlan ID: {ListingId}", id);
+                        TempData["ErrorMessage"] = "İlan silinirken bir sorun oluştu veya ilan zaten silinmiş.";
+                        await transaction.RollbackAsync();
+                        return RedirectToAction(nameof(myAds));
+                    }
+                    _logger.LogInformation("DeleteAdConfirmed POST: İlan başarıyla listings tablosundan silindi. İlan ID: {ListingId}", id);
+                }
+
+                await transaction.CommitAsync();
+                _logger.LogInformation("DeleteAdConfirmed POST: Transaction başarıyla commit edildi. İlan ID: {ListingId}", id);
+
+                // Fiziksel resim dosyalarını diskten sil (transaction commit edildikten sonra)
+                foreach (var imagePath in imagePathsToDelete)
+                {
+                    if (System.IO.File.Exists(imagePath))
+                    {
+                        try
+                        {
+                            System.IO.File.Delete(imagePath);
+                            _logger.LogInformation("DeleteAdConfirmed POST: Resim dosyası diskten silindi: {ImagePath}", imagePath);
+                        }
+                        catch (IOException ioEx)
+                        {
+                            _logger.LogError(ioEx, "DeleteAdConfirmed POST: Resim dosyası silinirken hata. Path: {ImagePath}", imagePath);
+                            // Bu kritik bir hata değil, sadece logla. İlan veritabanından silindi.
+                        }
+                    }
+                }
+
+                TempData["SuccessMessage"] = "İlan başarıyla silindi.";
+                return RedirectToAction(nameof(myAds));
+            }
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "DeleteAdConfirmed POST işlemi sırasında HATA oluştu. İlan ID: {ListingId}", id);
+            if (transaction != null && transaction.Connection != null && transaction.Connection.State == System.Data.ConnectionState.Open)
+            {
+                try { await transaction.RollbackAsync(); _logger.LogInformation("DeleteAdConfirmed POST: Hata nedeniyle transaction rollback yapıldı."); }
+                catch (Exception rbEx) { _logger.LogError(rbEx, "DeleteAdConfirmed POST: Transaction rollback sırasında hata."); }
+            }
+            TempData["ErrorMessage"] = "İlan silinirken bir hata oluştu: " + ex.Message;
+            return RedirectToAction(nameof(myAds)); // Hata durumunda myAds'e veya EditAd sayfasına yönlendirilebilir.
+        }
+    }
+
+    [Authorize] // Bu eyleme erişim için kullanıcının giriş yapmış olması gerekir
+    [HttpGet] // GET isteği için olduğunu belirtelim
+    public async Task<IActionResult> settings()
+    {
+        var userIdString = User.FindFirstValue(ClaimTypes.NameIdentifier);
+        if (string.IsNullOrEmpty(userIdString) || !int.TryParse(userIdString, out int userId))
+        {
+            _logger.LogWarning("Settings GET: Kullanıcı kimliği alınamadı veya geçersiz.");
+            return RedirectToAction("Login", "Account");
+        }
+
+        string userName = null;
+        string userEmail = User.FindFirstValue(ClaimTypes.Email); // E-postayı claim'den alabiliriz.
+
+        string connectionString = _configuration.GetConnectionString("DefaultConnection");
+        try
+        {
+            await using (var connection = new NpgsqlConnection(connectionString))
+            {
+                await connection.OpenAsync();
+                string query = "SELECT name FROM users WHERE id = @UserId";
+                await using (var command = new NpgsqlCommand(query, connection))
+                {
+                    command.Parameters.AddWithValue("@UserId", userId);
+                    var result = await command.ExecuteScalarAsync();
+                    if (result != null && result != DBNull.Value)
+                    {
+                        userName = result.ToString();
+                    }
+                }
+            }
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Settings GET: Kullanıcı adı çekilirken hata oluştu. UserId: {UserId}", userId);
+            TempData["ErrorMessage"] = "Kullanıcı bilgileri yüklenirken bir hata oluştu.";
+            // Hata durumunda boş modelle view döndürülebilir veya başka bir sayfaya yönlendirilebilir.
+        }
+
+        if (userName == null)
+        {
+            // Kullanıcı veritabanında bulunamazsa (teorik olarak olmamalı çünkü kimlik doğrulanmış)
+            _logger.LogWarning("Settings GET: UserId {UserId} için veritabanında kullanıcı adı bulunamadı.", userId);
+            TempData["ErrorMessage"] = "Kullanıcı bilgileri bulunamadı.";
+            // return RedirectToAction("Index", "Home"); // Ana sayfaya yönlendirilebilir
+        }
+
+        var model = new UserSettingsViewModel
+        {
+            Name = userName
+        };
+        ViewBag.UserEmail = userEmail; // E-postayı ViewBag ile taşıyalım, formda readonly gösterilecek.
+
+        return View(model);
+    }
+
+    [Authorize]
+    [HttpPost]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> UpdateSettings(UserSettingsViewModel model)
+    {
+        ViewBag.UserEmail = User.FindFirstValue(ClaimTypes.Email); // E-postayı tekrar ViewBag'e ekleyelim, sayfa yenilendiğinde lazım olacak.
+
+        if (!ModelState.IsValid)
+        {
+            _logger.LogWarning("UpdateSettings POST: ModelState geçerli değil.");
+            TempData["ErrorMessage"] = "Lütfen gerekli alanları doğru şekilde doldurun.";
+            return View("settings", model); // ViewBag.UserEmail burada view'a gitmeli
+        }
+
+        var userIdString = User.FindFirstValue(ClaimTypes.NameIdentifier);
+        if (string.IsNullOrEmpty(userIdString) || !int.TryParse(userIdString, out int userId))
+        {
+            _logger.LogWarning("UpdateSettings POST: Kullanıcı kimliği alınamadı veya geçersiz.");
+            TempData["ErrorMessage"] = "Oturumunuzla ilgili bir sorun oluştu. Lütfen tekrar giriş yapın.";
+            return RedirectToAction("Login", "Account");
+        }
+
+        string connectionString = _configuration.GetConnectionString("DefaultConnection");
+        try
+        {
+            await using (var connection = new NpgsqlConnection(connectionString))
+            {
+                await connection.OpenAsync();
+                string query = "UPDATE users SET name = @Name WHERE id = @UserId";
+                await using (var command = new NpgsqlCommand(query, connection))
+                {
+                    command.Parameters.AddWithValue("@Name", model.Name);
+                    command.Parameters.AddWithValue("@UserId", userId);
+                    int rowsAffected = await command.ExecuteNonQueryAsync();
+
+                    if (rowsAffected > 0)
+                    {
+                        _logger.LogInformation("UpdateSettings POST: Kullanıcı {UserId} adı başarıyla güncellendi: {Name}", userId, model.Name);
+                        TempData["SuccessMessage"] = "Adınız başarıyla güncellendi.";
+                    }
+                    else
+                    {
+                        _logger.LogWarning("UpdateSettings POST: Kullanıcı {UserId} için ad güncellenirken kayıt bulunamadı veya değişiklik olmadı.", userId);
+                        TempData["ErrorMessage"] = "Bilgileriniz güncellenirken bir sorun oluştu veya değişiklik yapılmadı.";
+                    }
+                }
+            }
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "UpdateSettings POST: Kullanıcı adı güncellenirken hata oluştu. UserId: {UserId}", userId);
+            TempData["ErrorMessage"] = "Bilgileriniz güncellenirken bir veritabanı hatası oluştu.";
+        }
+
+        // Güncellenmiş modeli (veya aynı modeli) ve ViewBag.UserEmail'i view'a geri gönder.
+        // Eğer işlem başarılıysa ve kullanıcıyı başka bir sayfaya yönlendirmek istemiyorsanız, 
+        // güncel bilgileri tekrar yükleyip göndermek daha iyi olabilir.
+        // Şimdilik aynı modeli geri gönderiyoruz, TempData mesajları sonucu gösterecek.
+        return View("settings", model);
     }
 
     // HostController içindeki Login metodu, AccountController'daki ile çakışıyor.

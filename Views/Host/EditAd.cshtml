@@ -103,6 +103,9 @@
             <a asp-action="myAds" class="btn btn-secondary">
                 <i class="fas fa-times"></i> İptal
             </a>
+            <button type="button" class="btn btn-danger" onclick="confirmDelete(@Model.Id)">
+                <i class="fas fa-trash"></i> İlanı Sil
+            </button>
         </div>
     </form>
 </div>
@@ -110,25 +113,30 @@
 @section Scripts {
     @{await Html.RenderPartialAsync("_ValidationScriptsPartial");}
     <script>
-        function previewImage(event) {
-            var reader = new FileReader();
-            var imageField = document.getElementById("imagePreview");
-            var currentImageField = document.getElementById("currentImage");
-            
-            reader.onload = function(){
-                if (reader.readyState === 2) {
-                    imageField.src = reader.result;
-                    imageField.style.display = 'block';
-                    if (currentImageField) currentImageField.style.display = 'none'; // Yeni resim seçilince mevcut resmi gizle
+        
+
+        function confirmDelete(adId) {
+            if (confirm("Bu ilanı silmek istediğinizden emin misiniz? Bu işlem geri alınamaz.")) {
+                // Formun action'ını ve method'unu değiştirerek silme işlemine yönlendir
+                var form = document.querySelector('form[asp-action="EditAd"]'); // Formu seç
+                if (form) {
+                    // Formun action URL'sini dinamik olarak oluştur
+                    form.action = '/Host/DeleteAdConfirmed/' + adId;
+                    form.method = 'post'; 
+                    form.submit();
+                } else {
+                    alert("Form bulunamadı. Silme işlemi gerçekleştirilemiyor.");
                 }
             }
-            if(event.target.files[0]){
-                reader.readAsDataURL(event.target.files[0]);
-            } else {
-                imageField.src = "#";
-                imageField.style.display = 'none';
-                 if (currentImageField) currentImageField.style.display = 'block'; // Seçim kaldırılırsa mevcut resmi geri göster
-            }
         }
+
+ @*//*     document.querySelector('form[asp-action="EditAd"]').addEventListener('submit', function(event) {
+            var newImageInput = document.querySelector('input[type="file"][asp-for="NewImage"]');
+            if (!newImageInput.files.length) {
+                event.preventDefault();
+                alert('Fotoğraf seçmeden değişiklik kaydedemezsiniz.');
+                window.location.href = '@Url.Action("myAds", "Host")';
+            }
+        }); *@
     </script>
 } 

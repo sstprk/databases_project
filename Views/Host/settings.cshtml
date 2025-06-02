@@ -1,48 +1,97 @@
 @{
     Layout = "~/Views/Shared/_Layout2.cshtml";
-    ViewData["Title"] = "Settings";
+    ViewData["Title"] = "Host Page";
 }
+
+
+
+<div class="custom-container">
+    <div class="row">
+      <!-- Sol Menü -->
+      <div class="col-md-3 sidebarS">
+        <button class="btn-login" onclick="window.location.href='@Url.Action("myAds", "Host")'">İlanlarım</button>
+        <button class="btn-login" onclick="window.location.href='@Url.Action("activeReservations", "Host")'">Aktif Rezervasyonlarım</button>
+        <button class="btn-login" onclick="window.location.href='@Url.Action("reservationHistory", "Host")'">Geçmiş Rezervasyonlarım</button>
+        <button class="btn-login" onclick="window.location.href='@Url.Action("newAd", "Host")'">Yeni İlan Ver</button>
+        <button class="btn-login" onclick="window.location.href='@Url.Action("settings", "Host")'">Ayarlar</button>
+        <button class="btn-login" id="btn-quit" onclick="window.location.href='@Url.Action("Logout", "Account")'">Çıkış Yap</button>
+
+      </div>
+
+
+      <!-- Sağ İçerik Alanı -->
+      <div class="col-md-9 content-areaS" id="icerik">
+        @model realCabinly.Models.UserSettingsViewModel
+
+
 <div class="container py-4">
-  <h3 class="mb-4">Hesap Ayarları</h3>
+    <h3 class="mb-4">@ViewData["Title"]</h3>
 
-  <div class="row">
-    
+    @if (TempData["SuccessMessage"] != null)
+    {
+        <div class="alert alert-success" role="alert">
+            @TempData["SuccessMessage"]
+        </div>
+    }
+    @if (TempData["ErrorMessage"] != null)
+    {
+        <div class="alert alert-danger" role="alert">
+            @TempData["ErrorMessage"]
+        </div>
+    }
 
-    <div class="col-md-8">
-      <!-- Sabit Bilgiler -->
-      <div class="mb-3">
-        <label class="form-label">Ad Soyad</label>
-        <div class="form-control bg-light" readonly>Ali Veli</div>
+    <div class="row justify-content-center" style="margin-top: 100px; border: 1px solid #ccc; padding: 20px; border-radius: 10px;width: 50cqi;" >
+        <div class="col-md-8">
+            <!-- Kullanıcı Bilgileri Güncelleme -->
+            <h5>Profil Bilgileri</h5>
+            <form asp-action="UpdateSettings" asp-controller="Host" method="post">
+                @Html.AntiForgeryToken()
+                <div asp-validation-summary="ModelOnly" class="text-danger mb-3"></div>
+
+                <div class="mb-3">
+                    <label asp-for="Name" class="form-label"></label>
+                    <input asp-for="Name" class="form-control" />
+                    <span asp-validation-for="Name" class="text-danger"></span>
+                </div>
+
+               
+
+                <button type="submit" class="btn-login">Bilgileri Kaydet</button>
+            </form>
+
+            <hr class="my-4" />
+
+            <!-- Şifre Güncelleme (Bu kısım AccountController altında yönetilmeli) -->
+            <h5>Şifre Güncelle</h5>
+           
+            
+            @* Şifre güncelleme formu (Mevcut haliyle bırakılabilir veya Account/Settings'e yönlendirilebilir) *@
+            <form asp-controller="Account" asp-action="ChangePassword" method="post"> <!-- AccountController'a yönlendirme örneği -->
+                 @Html.AntiForgeryToken()
+                <div class="mb-3">
+                    <label for="sifreEski" class="form-label">Mevcut Şifre</label>
+                    <input type="password" name="currentPassword" class="form-control" id="sifreEski" />
+                </div>
+
+                <div class="mb-3">
+                    <label for="sifreYeni" class="form-label">Yeni Şifre</label>
+                    <input type="password" name="newPassword" class="form-control" id="sifreYeni" />
+                </div>
+
+                <div class="mb-3">
+                    <label for="sifreYeniTekrar" class="form-label">Yeni Şifre (Tekrar)</label>
+                    <input type="password" name="confirmNewPassword" class="form-control" id="sifreYeniTekrar" />
+                </div>
+                <button type="submit" class="btn-login">Şifreyi Değiştir</button>
+            </form>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    @{await Html.RenderPartialAsync("_ValidationScriptsPartial");}
+}
+
       </div>
-
-      <div class="mb-3">
-        <label class="form-label">E-posta</label>
-        <div class="form-control bg-light" readonly>ali.veli@example.com</div>
-      </div>
-
-      <hr class="my-4" />
-
-      <!-- Şifre Güncelleme -->
-      <h5>Şifre Güncelle</h5>
-
-      <form>
-        <div class="mb-3">
-          <label for="sifreEski" class="form-label">Mevcut Şifre</label>
-          <input type="password" class="form-control" id="sifreEski" />
-        </div>
-
-        <div class="mb-3">
-          <label for="sifreYeni" class="form-label">Yeni Şifre</label>
-          <input type="password" class="form-control" id="sifreYeni" />
-        </div>
-
-        <div class="mb-3">
-          <label for="sifreYeniTekrar" class="form-label">Yeni Şifre (Tekrar)</label>
-          <input type="password" class="form-control" id="sifreYeniTekrar" />
-        </div>
-
-        <button type="submit" class="btn-login">Kaydet</button>
-      </form>
     </div>
   </div>
-</div>
