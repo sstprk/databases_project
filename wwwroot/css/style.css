@@ -256,53 +256,67 @@ height: 100%;
 
 
 .search-container {
-  margin: 120px 10px auto; /* Üstten 80px, alttan 80px, yanlardan auto (merkezleme) */
-  padding: 20px;
-  background: linear-gradient(135deg, #00B0B9, #FFD082); /* Hafif soluk versiyon */
+  margin: 80px 10px 20px 10px;
+  padding: 30px;
+  background: linear-gradient(135deg, #00B0B9, #FFD082);
   backdrop-filter: blur(10px);
   border-radius: 12px;
   box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
-  max-width: 1200px; /* Maksimum genişlik */
-  width: 65%; /* Ekran boyutuna göre genişlik */
-  margin-left: 20%;
-  margin-right: 20%;
-  margin-top: 10%;
+  width: calc(100% - 20px);
 }
-
 
 .search-container h2 {
   color: white;
   text-align: center;
-  margin-bottom: 20px;
-  font-size: 24px;
+  margin-bottom: 30px;
+  font-size: 28px;
 }
 
 .search-form {
   display: flex;
-  justify-content: space-between;
+  flex-direction: column;
   gap: 20px;
-  flex-wrap: wrap; /* Elemanların alt alta gelmesini sağlar */
+}
+
+.search-form .top-row {
+  display: flex;
+  gap: 20px;
+  align-items: stretch;
 }
 
 .search-form input,
-.search-form select,
-.search-form button {
-  padding: 10px;
+.search-form select {
+  padding: 15px;
   font-size: 16px;
   border-radius: 8px;
   border: 1px solid #ddd;
+  height: 54px;
 }
 
 .search-form input[type="text"] {
-  width: 40%;
+  flex: 2;
+  min-width: 300px;
 }
 
 .search-form select {
-  width: 20%;
+  flex: 1;
+  min-width: 150px;
 }
 
-.search-form input[type="date"] {
-  width: 45%;
+.search-form .dates-container {
+  display: flex;
+  gap: 20px;
+  flex: 2;
+}
+
+.search-form .dates-container input[type="date"] {
+  flex: 1;
+}
+
+.search-form .button-container {
+  display: flex;
+  justify-content: flex-end;
+  margin-top: 10px;
 }
 
 .search-form button {
@@ -310,7 +324,12 @@ height: 100%;
   color: white;
   border: none;
   cursor: pointer;
-  width: 15%;
+  padding: 15px 40px;
+  border-radius: 8px;
+  font-size: 18px;
+  font-weight: bold;
+  transition: background-color 0.3s;
+  min-width: 180px;
 }
 
 .search-form button:hover {
@@ -324,30 +343,30 @@ height: 100%;
 /* Duyarlı Tasarım */
 @media (max-width: 768px) {
   .search-container {
-    width: 95%; /* Mobilde biraz daha geniş */
+    margin: 10px;
+    padding: 20px;
+  }
+
+  .search-form .top-row {
+    flex-direction: column;
   }
 
   .search-form input[type="text"],
   .search-form select,
-  .search-form input[type="date"],
-  .search-form button {
-    width: 100%; /* Elemanları alt alta getirmek için */
-    margin-bottom: 10px; /* Alt kısımlara boşluk */
-  }
-
-  .search-form {
-    gap: 10px; /* Flexbox arası boşluk */
-  }
-
-  /* Gidiş ve dönüş tarihini yan yana yerleştir */
   .search-form .dates-container {
-    display: flex;
-    gap: 20px;
     width: 100%;
   }
 
-  .search-form .dates-container input[type="date"] {
-    width: 48%; /* Her iki tarihe de genişlik ver */
+  .search-form .dates-container {
+    flex-direction: column;
+  }
+
+  .search-form .button-container {
+    justify-content: center;
+  }
+
+  .search-form button {
+    width: 100%;
   }
 }
 #carouselExampleControls {
@@ -396,124 +415,54 @@ height: 100%;
 
 
 .filter-section {
-position: -webkit-sticky;
-width: 18%;
-position: sticky;
-top: 20px; /* Navbar'dan boşluk bırakmak için */
-height: fit-content;
-padding: 15px 10px 15px 25px ;
-background: #f8f9fa;
-border-radius: 8px;
-box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+  background: white;
+  padding: 25px;
+  border-radius: 12px;
+  box-shadow: 0 2px 15px rgba(0, 0, 0, 0.08);
 }
 
-.ads-section {
-padding-left: 30px; /* Filtre ile arasına boşluk */
+.filter-section h4 {
+  margin-bottom: 25px;
+  color: #333;
+  font-size: 20px;
 }
 
-  /* Mobil cihazlar için düzenleme */
-  @media (max-width: 768px) {
-    .main-content {
-      flex-direction: column;
-    }
-    .filter-section {
-      width: 100%;
-      position: static;
-      margin-bottom: 20px;
-    }
-  }
-  .custom-container {
-    margin-top: 90px;
-    margin-right: 50px;
-    margin-left: 0;
-    margin-bottom: 120px;
-    align-self: flex-start; /* sol tarafa yapışık */
-    width: calc(100% - 50px);
-  }
-  .social-icons {
-    margin-top: 30px;
-    text-align: center;
-  }
-  
-  .social-icons a {
-    display: inline-block;
-    margin: 0 10px;
-    color: #555;
-    font-size: 22px;
-    transition: color 0.3s, transform 0.3s;
-  }
-  
-  .social-icons a:hover {
-    color: #007bff;
-    transform: scale(1.2);
-  }
-  
-  
-    
-    
-    
-    
-    .container-cs {
-      max-width: 600px;
-      margin-top: 140px;
-      margin-bottom: 70px;
-      background: #fff;
-      border-radius: 12px;
-      padding: 30px;
-      box-shadow: 0 8px 16px rgba(0, 0, 0, 0.1);
-    }
-    
-    
-    
-    .contact-form .form-group {
-      margin-bottom: 20px;
-    }
-    
-    .contact-form label {
-      display: block;
-      margin-bottom: 8px;
-      font-weight: 600;
-    }
-    
-    .contact-form input,
-    .contact-form textarea {
-      width: 100%;
-      padding: 12px 14px;
-      border: 1px solid #ccc;
-      border-radius: 8px;
-      font-size: 15px;
-      transition: border 0.3s;
-    }
-    
-    .contact-form input:focus,
-    .contact-form textarea:focus {
-      border-color: #007bff;
-      outline: none;
-    }
-    
-    .button-s1 {
-      background-color: #007bff;
-      color: white;
-      padding: 14px 22px;
-      border: none;
-      border-radius: 8px;
-      font-size: 16px;
-      cursor: pointer;
-      transition: background 0.3s;
-    }
-    
-    .button-s1:hover {
-      background-color: #0056b3;
-    }
+.form-group {
+  margin-bottom: 25px;
+}
+
+.form-label {
+  display: block;
+  margin-bottom: 12px;
+  color: #555;
+  font-size: 16px;
+}
+
+.form-range {
+  width: 100%;
+  height: 8px;
+}
+
+.form-control {
+  padding: 12px;
+  font-size: 16px;
+  border-radius: 8px;
+  border: 1px solid #ddd;
+}
+
+.btn-primary {
+  padding: 12px 20px;
+  font-size: 16px;
+  font-weight: bold;
+}
+
 .custom-card {
-  border: none;
-  overflow: hidden;
-  border-radius: 15px;
-  transition: transform 0.3s ease;
+  transition: transform 0.2s;
+  height: 100%;
 }
 
 .custom-card:hover {
-  transform: scale(1.03);
+  transform: translateY(-5px);
 }
 
 .card-img-overlay-price {
