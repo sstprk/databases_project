@@ -10,11 +10,13 @@
       <!-- Sol Menü -->
       <div class="col-md-3 sidebarS">
         <button class="btn-login" onclick="window.location.href='@Url.Action("myAds", "Host")'">İlanlarım</button>
+        <button class="btn-login" onclick="window.location.href='@Url.Action("pendingReservations", "Host")'">Onay Bekleyen Rezervasyonlar</button>
         <button class="btn-login" onclick="window.location.href='@Url.Action("activeReservations", "Host")'">Aktif Rezervasyonlarım</button>
         <button class="btn-login" onclick="window.location.href='@Url.Action("reservationHistory", "Host")'">Geçmiş Rezervasyonlarım</button>
         <button class="btn-login" onclick="window.location.href='@Url.Action("newAd", "Host")'">Yeni İlan Ver</button>
         <button class="btn-login" onclick="window.location.href='@Url.Action("settings", "Host")'">Ayarlar</button>
         <button class="btn-login" id="btn-quit" onclick="window.location.href='@Url.Action("Logout", "Account")'">Çıkış Yap</button>
+
 
       </div>
 

@@ -1,0 +1,157 @@
+@model realCabinly.Models.IlanDetailViewModel
+
+@{
+    ViewData["Title"] = Model?.Title ?? "İlan Detayı";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+<div class="container mt-5 mb-5" >
+    @if (Model != null)
+    {
+        <div class="row" style="margin-top: 125px;">
+            <!-- Sol Sütun: Resim Galerisi ve Açıklama -->
+            <div class="col-lg-8">
+                <!-- Bootstrap Carousel Resim Galerisi -->
+                @if (Model.AllImageUrls != null && Model.AllImageUrls.Any())
+                {
+                    <div id="adImageCarousel" class="carousel slide shadow-sm rounded mb-4" data-bs-ride="carousel">
+                        @if (Model.AllImageUrls.Count > 1)
+                        {
+                            <div class="carousel-indicators">
+                                @for (int i = 0; i < Model.AllImageUrls.Count; i++)
+                                {
+                                    <button type="button" data-bs-target="#adImageCarousel" data-bs-slide-to="@i" class="@(i == 0 ? "active" : "")" aria-current="@(i == 0 ? "true" : "false")" aria-label="Slide @(i + 1)"></button>
+                                }
+                            </div>
+                        }
+                        <div class="carousel-inner rounded">
+                            @for (int i = 0; i < Model.AllImageUrls.Count; i++)
+                            {
+                                <div class="carousel-item @(i == 0 ? "active" : "")">
+                                    <img src="@Url.Content("~" + Model.AllImageUrls[i])" class="d-block w-100" alt="@Model.Title - Resim @(i+1)" style="height: 450px; object-fit: cover; width: 100%;">
+                                </div>
+                            }
+                        </div>
+                        @if (Model.AllImageUrls.Count > 1)
+                        {
+                            <button class="carousel-control-prev" type="button" data-bs-target="#adImageCarousel" data-bs-slide="prev">
+                                <span class="carousel-control-prev-icon" aria-hidden="true"></span>
+                                <span class="visually-hidden">Previous</span>
+                            </button>
+                            <button class="carousel-control-next" type="button" data-bs-target="#adImageCarousel" data-bs-slide="next">
+                                <span class="carousel-control-next-icon" aria-hidden="true"></span>
+                                <span class="visually-hidden">Next</span>
+                            </button>
+                        }
+                    </div>
+                }
+                else
+                {
+                    <img src="@Url.Content("~/images/default-ad-image.png")" class="d-block w-100 img-fluid rounded shadow-sm mb-4" alt="Varsayılan İlan Resmi" style="height: 450px; object-fit: cover; width: 100%;">
+                }
+
+                <div class="card shadow-sm mb-4">
+                    <div class="card-body">
+                        <h2 class="card-title">@Model.Title</h2>
+                        <p class="card-text text-muted"><i class="bi bi-geo-alt-fill"></i> @Model.Location</p>
+                        <hr>
+                        <h5 class="mt-4">Açıklama</h5>
+                        <p class="card-text" style="white-space: pre-line;">@Model.Description</p>
+                    </div>
+                    <div class="card-footer text-muted">
+                        Yayın Tarihi: @Model.CreatedAt.ToString("dd MMMM yyyy")
+                    </div>
+                </div>
+            </div>
+
+            <!-- Sağ Sütun: Fiyat ve Rezervasyon Formu -->
+            <div class="col-lg-4">
+                <div class="card shadow-sm" >
+                    <div class="card-body">
+                        <h4 class="mb-3">
+                            <span class="fw-bold text-primary">₺@Model.PricePerNight.ToString("N0")</span>
+                            <span class="text-muted fs-6">/ gece</span>
+                        </h4>
+                        
+                        @if (!Model.IsAvailable)
+                        {
+                            <div class="alert alert-warning" role="alert">
+                                <i class="bi bi-exclamation-triangle-fill"></i> Bu ilan şu anda rezervasyona uygun değildir.
+                            </div>
+                        }
+                        else
+                        {
+                            <h5 class="mb-3">Rezervasyon Yap</h5>
+                            <form id="reservationForm" method="post" action="@Url.Action("CreateBooking", "Home")">
+                                @Html.AntiForgeryToken()
+                                <input type="hidden" name="ListingId" value="@Model.Id" />
+                                <div class="mb-3">
+                                    <label for="checkInDate" class="form-label">Giriş Tarihi</label>
+                                    <input type="date" class="form-control" id="checkInDate" name="CheckInDate" required>
+                                </div>
+                                <div class="mb-3">
+                                    <label for="checkOutDate" class="form-label">Çıkış Tarihi</label>
+                                    <input type="date" class="form-control" id="checkOutDate" name="CheckOutDate" required>
+                                </div>
+                                <div class="mb-3">
+                                    <label for="guestCount" class="form-label">Kişi Sayısı</label>
+                                    <input type="number" class="form-control" id="guestCount" name="GuestCount" min="1" value="1" required>
+                                </div>
+                                <div class="d-grid">
+                                    <button type="submit" class="btn btn-primary btn-lg">Rezervasyon İsteği Gönder</button>
+                                </div>
+                            </form>
+                            <div id="reservationMessage" class="mt-3">
+                                @if (TempData["ReservationMessage"] != null)
+                                {
+                                    <div class="alert alert-info" role="alert">
+                                        @TempData["ReservationMessage"]
+                                    </div>
+                                }
+                            </div>
+                        }
+                    </div>
+                </div>
+            </div>
+        </div>
+    }
+    else
+    {
+        <div class="alert alert-danger text-center" role="alert">
+            <h4 class="alert-heading"><i class="bi bi-exclamation-triangle"></i> Hata!</h4>
+            <p>İlan detayları yüklenemedi veya belirtilen ilan bulunamadı.</p>
+            <hr>
+            <p class="mb-0">Lütfen ilan listesine geri dönüp tekrar deneyin: <a asp-action="Ads" asp-controller="Home" class="alert-link">İlanlar</a></p>
+        </div>
+    }
+</div>
+
+@section Scripts {
+    <script>
+        // Giriş tarihinin bugünden önce olmamasını ve çıkış tarihinin giriş tarihinden önce olmamasını sağlama
+        document.addEventListener('DOMContentLoaded', function () {
+            var today = new Date().toISOString().split('T')[0];
+            var checkInInput = document.getElementById('checkInDate');
+            var checkOutInput = document.getElementById('checkOutDate');
+
+            if(checkInInput) {
+                checkInInput.setAttribute('min', today);
+                checkInInput.addEventListener('change', function() {
+                    if (checkOutInput) {
+                        checkOutInput.setAttribute('min', this.value);
+                        if (checkOutInput.value && checkOutInput.value < this.value) {
+                            checkOutInput.value = this.value; 
+                        }
+                    }
+                });
+            }
+            if(checkOutInput && checkInInput) {
+                 if(!checkInInput.value) { 
+                    checkOutInput.setAttribute('min', today);
+                 } else {
+                    checkOutInput.setAttribute('min', checkInInput.value || today);
+                 }
+            }
+        });
+    </script>
+} 

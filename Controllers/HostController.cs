@@ -68,7 +68,31 @@ public class AdEditViewModel
     public bool IsActive { get; set; }
     
     public string CurrentCoverImageUrl { get; set; } // Mevcut kapak resmi yolu
-    public IFormFile NewImage { get; set; } // Yeni yüklenecek resim
+    public IFormFile? NewImage { get; set; } // Yeni yüklenecek resim
+}
+
+// Yeni eklenecek Model
+public class SetAdVisibilityRequest
+{
+    [Required]
+    public int Id { get; set; }
+    [Required]
+    public bool IsActive { get; set; }
+}
+
+public class PendingReservationViewModel
+{
+    public int BookingId { get; set; }
+    public int ListingId { get; set; }
+    public string ListingTitle { get; set; }
+    public string ListingLocation { get; set; }
+    public string ListingCoverImageUrl { get; set; }
+    public string GuestName { get; set; } // Misafir adı (users tablosundan)
+    public string GuestEmail { get; set; } // Misafir e-postası (users tablosundan)
+    public DateTime CheckInDate { get; set; }
+    public DateTime CheckOutDate { get; set; }
+    public decimal TotalPrice { get; set; }
+    public string BookingStatus { get; set; }
 }
 
 public class HostController : Controller
@@ -90,15 +114,175 @@ public class HostController : Controller
         return View(); 
     }
 
-    // GET
-    public IActionResult activeReservations()
+    [Authorize(Roles = "host")]
+    public async Task<IActionResult> activeReservations()
     {
-        return View();
+        _logger.LogInformation("activeReservations action started for host to fetch CURRENTLY active bookings."); // Log mesajı düzeltildi
+        var hostUserIdString = User.FindFirstValue(ClaimTypes.NameIdentifier);
+        if (string.IsNullOrEmpty(hostUserIdString) || !int.TryParse(hostUserIdString, out int hostUserId))
+        {
+            _logger.LogWarning("activeReservations: Host User ID could not be parsed or was null/empty.");
+            TempData["ErrorMessage"] = "Oturumunuz bulunamadı veya geçersiz.";
+            return RedirectToAction("Index", "Home"); 
+        }
+        _logger.LogInformation("activeReservations: Host User ID {HostUserId} successfully parsed.", hostUserId);
+
+        List<PendingReservationViewModel> activeBookings = new List<PendingReservationViewModel>(); // Değişken adı düzeltildi
+        string connectionString = _configuration.GetConnectionString("DefaultConnection");
+
+        try
+        {
+            using (NpgsqlConnection connection = new NpgsqlConnection(connectionString))
+            {
+                await connection.OpenAsync();
+                // SADECE durumu 'confirmed' olan VE bitiş tarihi GEÇMEMİŞ (aktif) rezervasyonları çek
+                string sql = @"
+                    SELECT 
+                        b.id AS booking_id,
+                        l.id AS listing_id,
+                        l.title AS listing_title,
+                        l.location AS listing_location,
+                        (SELECT ph.image_url FROM photos ph WHERE ph.listing_id = l.id AND ph.is_cover = TRUE LIMIT 1) AS listing_cover_image_url,
+                        u.name AS guest_name,
+                        u.email AS guest_email,
+                        b.start_date,
+                        b.end_date,
+                        b.total_price,
+                        b.status AS booking_status 
+                    FROM bookings b
+                    JOIN listings l ON b.listing_id = l.id
+                    JOIN users u ON b.user_id = u.id
+                    WHERE l.user_id = @host_user_id AND b.status = 'confirmed' AND b.end_date >= CURRENT_DATE
+                    ORDER BY b.start_date ASC;
+                ";
+                _logger.LogInformation("activeReservations (fetching current active): SQL to execute: {SQL}", sql.Replace("\r\n", " ").Replace("\n", " "));
+                using (NpgsqlCommand command = new NpgsqlCommand(sql, connection))
+                {
+                    command.Parameters.AddWithValue("@host_user_id", hostUserId);
+                    using (NpgsqlDataReader reader = await command.ExecuteReaderAsync())
+                    {
+                        while (await reader.ReadAsync())
+                        {
+                            activeBookings.Add(new PendingReservationViewModel 
+                            {
+                                BookingId = reader.GetInt32(reader.GetOrdinal("booking_id")),
+                                ListingId = reader.GetInt32(reader.GetOrdinal("listing_id")),
+                                ListingTitle = reader.GetString(reader.GetOrdinal("listing_title")),
+                                ListingLocation = reader.GetString(reader.GetOrdinal("listing_location")),
+                                ListingCoverImageUrl = reader.IsDBNull(reader.GetOrdinal("listing_cover_image_url")) 
+                                                     ? "/images/default-ad-image.png" 
+                                                     : reader.GetString(reader.GetOrdinal("listing_cover_image_url")),
+                                GuestName = reader.GetString(reader.GetOrdinal("guest_name")),
+                                GuestEmail = reader.GetString(reader.GetOrdinal("guest_email")),
+                                CheckInDate = reader.GetDateTime(reader.GetOrdinal("start_date")),
+                                CheckOutDate = reader.GetDateTime(reader.GetOrdinal("end_date")),
+                                TotalPrice = reader.GetDecimal(reader.GetOrdinal("total_price")),
+                                BookingStatus = reader.GetString(reader.GetOrdinal("booking_status"))
+                            });
+                        }
+                        _logger.LogInformation("activeReservations (fetching current active): Found {Count} bookings for host {HostUserId}.", activeBookings.Count, hostUserId);
+                    }
+                }
+            }
+        }
+        catch (NpgsqlException pgEx)
+        {
+            _logger.LogError(pgEx, "activeReservations (fetching current active) NpgsqlException for host {HostUserId}. Error: {ErrorMessage}", hostUserId, pgEx.Message);
+            ViewBag.ErrorMessage = "Aktif rezervasyonlar yüklenirken bir veritabanı hatası oluştu.";
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "activeReservations (fetching current active) Generic Exception for host {HostUserId}. Error: {ErrorMessage}", hostUserId, ex.Message);
+            ViewBag.ErrorMessage = "Aktif rezervasyonlar yüklenirken beklenmedik bir hata oluştu.";
+        }
+
+        return View(activeBookings);
     }
 
-    public IActionResult reservationHistory()
+    [Authorize(Roles = "host")]
+    public async Task<IActionResult> reservationHistory()
     {
-        return View();
+        _logger.LogInformation("reservationHistory action started for host to fetch past bookings.");
+        var hostUserIdString = User.FindFirstValue(ClaimTypes.NameIdentifier);
+        if (string.IsNullOrEmpty(hostUserIdString) || !int.TryParse(hostUserIdString, out int hostUserId))
+        {
+            _logger.LogWarning("reservationHistory: Host User ID could not be parsed or was null/empty.");
+            TempData["ErrorMessage"] = "Oturumunuz bulunamadı veya geçersiz.";
+            return RedirectToAction("Login", "Account"); 
+        }
+        _logger.LogInformation("reservationHistory: Host User ID {HostUserId} successfully parsed.", hostUserId);
+
+        List<PendingReservationViewModel> pastBookings = new List<PendingReservationViewModel>();
+        string connectionString = _configuration.GetConnectionString("DefaultConnection");
+
+        try
+        {
+            using (NpgsqlConnection connection = new NpgsqlConnection(connectionString))
+            {
+                await connection.OpenAsync();
+                // Durumu 'cancelled' olan VEYA durumu 'confirmed' olup bitiş tarihi geçmiş olan rezervasyonları çek
+                string sql = @"
+                    SELECT 
+                        b.id AS booking_id,
+                        l.id AS listing_id,
+                        l.title AS listing_title,
+                        l.location AS listing_location,
+                        (SELECT ph.image_url FROM photos ph WHERE ph.listing_id = l.id AND ph.is_cover = TRUE LIMIT 1) AS listing_cover_image_url,
+                        u.name AS guest_name,
+                        u.email AS guest_email,
+                        b.start_date,
+                        b.end_date,
+                        b.total_price,
+                        b.status AS booking_status
+                    FROM bookings b
+                    JOIN listings l ON b.listing_id = l.id
+                    JOIN users u ON b.user_id = u.id
+                    WHERE l.user_id = @host_user_id 
+                      AND (b.status = 'cancelled' OR (b.status = 'confirmed' AND b.end_date < CURRENT_DATE))
+                    ORDER BY b.start_date DESC;
+                "; 
+                _logger.LogInformation("reservationHistory: SQL to execute: {SQL}", sql.Replace("\r\n", " ").Replace("\n", " "));
+                using (NpgsqlCommand command = new NpgsqlCommand(sql, connection))
+                {
+                    command.Parameters.AddWithValue("@host_user_id", hostUserId);
+                    using (NpgsqlDataReader reader = await command.ExecuteReaderAsync())
+                    {
+                        while (await reader.ReadAsync())
+                        {
+                            pastBookings.Add(new PendingReservationViewModel // Reusing PendingReservationViewModel
+                            {
+                                BookingId = reader.GetInt32(reader.GetOrdinal("booking_id")),
+                                ListingId = reader.GetInt32(reader.GetOrdinal("listing_id")),
+                                ListingTitle = reader.GetString(reader.GetOrdinal("listing_title")),
+                                ListingLocation = reader.GetString(reader.GetOrdinal("listing_location")),
+                                ListingCoverImageUrl = reader.IsDBNull(reader.GetOrdinal("listing_cover_image_url")) 
+                                                     ? "/images/default-ad-image.png" 
+                                                     : reader.GetString(reader.GetOrdinal("listing_cover_image_url")),
+                                GuestName = reader.GetString(reader.GetOrdinal("guest_name")),
+                                GuestEmail = reader.GetString(reader.GetOrdinal("guest_email")),
+                                CheckInDate = reader.GetDateTime(reader.GetOrdinal("start_date")),
+                                CheckOutDate = reader.GetDateTime(reader.GetOrdinal("end_date")),
+                                TotalPrice = reader.GetDecimal(reader.GetOrdinal("total_price")),
+                                BookingStatus = reader.GetString(reader.GetOrdinal("booking_status"))
+                            });
+                        }
+                        _logger.LogInformation("reservationHistory: Found {Count} past reservations for host {HostUserId}.", pastBookings.Count, hostUserId);
+                    }
+                }
+            }
+        }
+        catch (NpgsqlException pgEx)
+        {
+            _logger.LogError(pgEx, "reservationHistory NpgsqlException for host {HostUserId}. Error: {ErrorMessage}", hostUserId, pgEx.Message);
+            ViewBag.ErrorMessage = "Geçmiş rezervasyonlar yüklenirken bir veritabanı hatası oluştu.";
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "reservationHistory Generic Exception for host {HostUserId}. Error: {ErrorMessage}", hostUserId, ex.Message);
+            ViewBag.ErrorMessage = "Geçmiş rezervasyonlar yüklenirken beklenmedik bir hata oluştu.";
+        }
+
+        return View(pastBookings);
     }
 
     public IActionResult hostAboutPage()
@@ -116,6 +300,91 @@ public class HostController : Controller
         return View();
     }
 
+    [Authorize(Roles = "host")] // Sadece host rolündeki kullanıcılar erişebilir
+    public async Task<IActionResult> pendingReservations()
+    {
+        _logger.LogInformation("pendingReservations action started for host.");
+        var hostUserIdString = User.FindFirstValue(ClaimTypes.NameIdentifier);
+        if (string.IsNullOrEmpty(hostUserIdString) || !int.TryParse(hostUserIdString, out int hostUserId))
+        {
+            _logger.LogWarning("pendingReservations: Host User ID could not be parsed or was null/empty.");
+            TempData["ErrorMessage"] = "Oturumunuz bulunamadı veya geçersiz.";
+            return RedirectToAction("Index", "Home");
+        }
+        _logger.LogInformation("pendingReservations: Host User ID {HostUserId} successfully parsed.", hostUserId);
+
+        List<PendingReservationViewModel> pendingBookings = new List<PendingReservationViewModel>();
+        string connectionString = _configuration.GetConnectionString("DefaultConnection");
+
+        try
+        {
+            using (NpgsqlConnection connection = new NpgsqlConnection(connectionString))
+            {
+                await connection.OpenAsync();
+                string sql = @"
+                    SELECT 
+                        b.id AS booking_id,
+                        l.id AS listing_id,
+                        l.title AS listing_title,
+                        l.location AS listing_location,
+                        (SELECT ph.image_url FROM photos ph WHERE ph.listing_id = l.id AND ph.is_cover = TRUE LIMIT 1) AS listing_cover_image_url,
+                        u.name AS guest_name,
+                        u.email AS guest_email,
+                        b.start_date,
+                        b.end_date,
+                        b.total_price,
+                        b.status AS booking_status
+                    FROM bookings b
+                    JOIN listings l ON b.listing_id = l.id
+                    JOIN users u ON b.user_id = u.id
+                    WHERE l.user_id = @host_user_id AND b.status = 'pending'
+                    ORDER BY b.start_date ASC;
+                ";
+                _logger.LogInformation("pendingReservations: SQL to execute: {SQL}", sql.Replace("\\r\\n", " ").Replace("\\n", " "));
+                using (NpgsqlCommand command = new NpgsqlCommand(sql, connection))
+                {
+                    command.Parameters.AddWithValue("@host_user_id", hostUserId);
+                    using (NpgsqlDataReader reader = await command.ExecuteReaderAsync())
+                    {
+                        while (await reader.ReadAsync())
+                        {
+                            pendingBookings.Add(new PendingReservationViewModel
+                            {
+                                BookingId = reader.GetInt32(reader.GetOrdinal("booking_id")),
+                                ListingId = reader.GetInt32(reader.GetOrdinal("listing_id")),
+                                ListingTitle = reader.GetString(reader.GetOrdinal("listing_title")),
+                                ListingLocation = reader.GetString(reader.GetOrdinal("listing_location")),
+                                ListingCoverImageUrl = reader.IsDBNull(reader.GetOrdinal("listing_cover_image_url")) 
+                                                     ? "/images/default-ad-image.png" 
+                                                     : reader.GetString(reader.GetOrdinal("listing_cover_image_url")),
+                                GuestName = reader.GetString(reader.GetOrdinal("guest_name")),
+                                GuestEmail = reader.GetString(reader.GetOrdinal("guest_email")),
+                                CheckInDate = reader.GetDateTime(reader.GetOrdinal("start_date")),
+                                CheckOutDate = reader.GetDateTime(reader.GetOrdinal("end_date")),
+                                TotalPrice = reader.GetDecimal(reader.GetOrdinal("total_price")),
+                                BookingStatus = reader.GetString(reader.GetOrdinal("booking_status"))
+                            });
+                        }
+                        _logger.LogInformation("pendingReservations: Found {Count} pending reservations for host {HostUserId}.", pendingBookings.Count, hostUserId);
+                    }
+                }
+            }
+        }
+        catch (NpgsqlException pgEx)
+        {
+            _logger.LogError(pgEx, "pendingReservations NpgsqlException for host {HostUserId}. Error: {ErrorMessage}. SQLState: {SQLState}. Details: {ErrorDetails}", hostUserId, pgEx.Message, pgEx.SqlState, pgEx.ToString());
+            ViewBag.ErrorMessage = "Rezervasyonlar yüklenirken bir veritabanı hatası oluştu.";
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "pendingReservations Generic Exception for host {HostUserId}. Exception Type: {ExceptionType}, Message: {ErrorMessage}. Details: {ErrorDetails}", hostUserId, ex.GetType().FullName, ex.Message, ex.ToString());
+            ViewBag.ErrorMessage = "Rezervasyonlar yüklenirken beklenmedik bir hata oluştu.";
+        }
+
+        return View(pendingBookings);
+    }
+
+    [Authorize(Roles = "host")]
     public async Task<IActionResult> myAds()
     {
         _logger.LogInformation("myAds sayfası için kullanıcı ilanları çekiliyor.");
@@ -123,11 +392,10 @@ public class HostController : Controller
         if (string.IsNullOrEmpty(userIdString) || !int.TryParse(userIdString, out int userId))
         {
             _logger.LogWarning("myAds: Kullanıcı kimliği alınamadı veya geçersiz.");
-            // Kullanıcı girişi yapılmamışsa veya ID alınamıyorsa login'e yönlendirilebilir veya hata mesajı gösterilebilir.
             return RedirectToAction("Login", "Account"); 
         }
 
-        _logger.LogInformation("myAds: Kullanıcı ID'si {UserId} için aktif ilanlar çekilecek.", userId);
+        _logger.LogInformation("myAds: Kullanıcı ID'si {UserId} için TÜM ilanlar çekilecek (aktif ve pasif).", userId);
         List<Ilan> ads = new List<Ilan>();
         string connectionString = _configuration.GetConnectionString("DefaultConnection");
 
@@ -136,8 +404,6 @@ public class HostController : Controller
             using (NpgsqlConnection connection = new NpgsqlConnection(connectionString))
             {
                 await connection.OpenAsync();
-                // listings tablosundan user_id'ye ve is_active=true durumuna göre ilanları çek.
-                // Her ilan için photos tablosundan is_cover=true olan ilk resmi (image_url) LEFT JOIN ile al.
                 string sql = @"
                     SELECT 
                         l.id AS listing_id,
@@ -151,7 +417,7 @@ public class HostController : Controller
                     FROM 
                         listings l
                     WHERE 
-                        l.user_id = @user_id AND l.is_active = TRUE
+                        l.user_id = @user_id
                     ORDER BY
                         l.created_at DESC;
                 ";
@@ -176,7 +442,7 @@ public class HostController : Controller
                                 CoverImageUrl = reader.IsDBNull(reader.GetOrdinal("cover_image_url")) ? "/images/default-ad-image.png" : reader.GetString(reader.GetOrdinal("cover_image_url"))
                             });
                         }
-                        _logger.LogInformation("myAds: {AdCount} adet aktif ilan bulundu ve modellendi.", ads.Count);
+                        _logger.LogInformation("myAds: {AdCount} adet ilan bulundu ve modellendi.", ads.Count);
                     }
                 }
             }
@@ -184,7 +450,6 @@ public class HostController : Controller
         catch (NpgsqlException pgEx)
         {
             _logger.LogError(pgEx, "myAds: İlanlar çekilirken PostgreSQL HATA oluştu. UserId: {UserId}", userId);
-            // Hata durumunda boş liste veya hata mesajıyla view döndürülebilir.
             ViewBag.ErrorMessage = "İlanlarınız yüklenirken bir veritabanı hatası oluştu.";
         }
         catch (Exception ex)
@@ -193,7 +458,7 @@ public class HostController : Controller
             ViewBag.ErrorMessage = "İlanlarınız yüklenirken beklenmedik bir hata oluştu.";
         }
 
-        return View(ads); // List<MyAdViewModel> modelini view'a gönder
+        return View(ads);
     }
 
     public IActionResult newAd()
@@ -439,6 +704,8 @@ public class HostController : Controller
             _logger.LogWarning("EditAd POST: Kullanıcı kimliği alınamadı veya geçersiz.");
             return RedirectToAction("Login", "Account");
         }
+
+        ModelState.Remove("NewImage");
 
         if (!ModelState.IsValid)
         {
@@ -999,4 +1266,333 @@ public class HostController : Controller
         }
     }
     */
+
+    // YENİ EKLENEN METOD
+    [HttpPost]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> SetAdVisibility([FromBody] SetAdVisibilityRequest request)
+    {
+        _logger.LogInformation("SetAdVisibility çağrıldı. Ilan ID: {IlanId}, IsActive: {IsActive}", request.Id, request.IsActive);
+
+        if (!ModelState.IsValid)
+        {
+            _logger.LogWarning("SetAdVisibility: ModelState geçersiz. Hatalar: {ModelStateErrors}", ModelState.Values.SelectMany(v => v.Errors).Select(e => e.ErrorMessage));
+            // Model geçerli değilse, tüm model hatalarını içeren bir yanıt döndür
+            var errors = ModelState.ToDictionary(
+                kvp => kvp.Key,
+                kvp => kvp.Value.Errors.Select(e => e.ErrorMessage).ToArray()
+            );
+            return Json(new { success = false, message = "Geçersiz istek verisi.", errors = errors });
+        }
+
+        var userIdString = User.FindFirstValue(ClaimTypes.NameIdentifier);
+        if (string.IsNullOrEmpty(userIdString) || !int.TryParse(userIdString, out int userId))
+        {
+            _logger.LogWarning("SetAdVisibility: Kullanıcı kimliği alınamadı veya geçersiz.");
+            return Json(new { success = false, message = "Kullanıcı kimliği doğrulanamadı." });
+        }
+
+        string connectionString = _configuration.GetConnectionString("DefaultConnection");
+        try
+        {
+            using (NpgsqlConnection connection = new NpgsqlConnection(connectionString))
+            {
+                await connection.OpenAsync();
+                // Sadece ilanın sahibinin kendi ilanının görünürlüğünü değiştirebildiğinden emin olalım.
+                // Önce ilanın user_id'sini kontrol edelim.
+                string checkOwnerSql = "SELECT user_id FROM listings WHERE id = @id;";
+                int ownerUserId = -1;
+                using (NpgsqlCommand checkCommand = new NpgsqlCommand(checkOwnerSql, connection))
+                {
+                    checkCommand.Parameters.AddWithValue("@id", request.Id);
+                    var result = await checkCommand.ExecuteScalarAsync();
+                    if (result != null && result != DBNull.Value)
+                    {
+                        ownerUserId = Convert.ToInt32(result);
+                    }
+                }
+
+                if (ownerUserId != userId)
+                {
+                    _logger.LogWarning("SetAdVisibility: Kullanıcı {UserId}, sahip olmadığı ilanın (ID: {IlanId}, SahipID: {OwnerId}) görünürlüğünü değiştirmeye çalıştı.", userId, request.Id, ownerUserId);
+                    return Json(new { success = false, message = "Bu ilanın görünürlüğünü değiştirme yetkiniz yok." });
+                }
+
+                // İlanın sahibi doğruysa güncelleme yap
+                string sql = "UPDATE listings SET is_active = @is_active WHERE id = @id AND user_id = @user_id;";
+                _logger.LogInformation("SetAdVisibility: Çalıştırılacak SQL: {SQLQuery}", sql);
+                using (NpgsqlCommand command = new NpgsqlCommand(sql, connection))
+                {
+                    command.Parameters.AddWithValue("@is_active", request.IsActive);
+                    command.Parameters.AddWithValue("@id", request.Id);
+                    command.Parameters.AddWithValue("@user_id", userId); // Güvenlik için user_id'yi de ekleyelim
+
+                    int affectedRows = await command.ExecuteNonQueryAsync();
+                    if (affectedRows > 0)
+                    {
+                        _logger.LogInformation("SetAdVisibility: Ilan (ID: {IlanId}) görünürlüğü {IsActive} olarak güncellendi. Etkilenen satır sayısı: {AffectedRows}", request.Id, request.IsActive, affectedRows);
+                        return Json(new { success = true, isActive = request.IsActive });
+                    }
+                    else
+                    {
+                        _logger.LogWarning("SetAdVisibility: Ilan (ID: {IlanId}, UserID: {UserId}) güncellenirken hiçbir satır etkilenmedi (belki ilan bulunamadı veya zaten istenen durumda).", request.Id, userId);
+                        // İlan bulunamadı veya zaten istenen durumda olabilir.
+                        // İlanın mevcut durumunu kontrol edip ona göre bir mesaj döndürebiliriz,
+                        // ya da genel bir hata mesajı verebiliriz. Şimdilik genel bir mesaj verelim.
+                        return Json(new { success = false, message = "İlan güncellenemedi. İlan bulunamadı veya zaten istenen görünürlük durumunda olabilir." });
+                    }
+                }
+            }
+        }
+        catch (NpgsqlException pgEx)
+        {
+            _logger.LogError(pgEx, "SetAdVisibility: Ilan (ID: {IlanId}) görünürlüğü güncellenirken PostgreSQL HATA oluştu.", request.Id);
+            return Json(new { success = false, message = "Veritabanı hatası nedeniyle ilan görünürlüğü güncellenemedi." });
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "SetAdVisibility: Ilan (ID: {IlanId}) görünürlüğü güncellenirken genel HATA oluştu.", request.Id);
+            return Json(new { success = false, message = "Beklenmedik bir hata nedeniyle ilan görünürlüğü güncellenemedi." });
+        }
+    }
+
+    [HttpPost]
+    [ValidateAntiForgeryToken]
+    [Authorize(Roles = "host")]
+    public async Task<IActionResult> ConfirmBooking(int bookingId)
+    {
+        _logger.LogInformation("ConfirmBooking POST action started for BookingId: {BookingId}", bookingId);
+        var hostUserIdString = User.FindFirstValue(ClaimTypes.NameIdentifier);
+        if (string.IsNullOrEmpty(hostUserIdString) || !int.TryParse(hostUserIdString, out int hostUserId))
+        {
+            _logger.LogWarning("ConfirmBooking: Host User ID could not be parsed or was null/empty.");
+            TempData["ErrorMessage"] = "Oturumunuz bulunamadı veya geçersiz.";
+            return RedirectToAction(nameof(pendingReservations));
+        }
+        _logger.LogInformation("ConfirmBooking: Host User ID {HostUserId} successfully parsed.", hostUserId);
+
+        string connectionString = _configuration.GetConnectionString("DefaultConnection");
+        try
+        {
+            using (NpgsqlConnection connection = new NpgsqlConnection(connectionString))
+            {
+                await connection.OpenAsync();
+                // 1. Rezervasyonun host'a ait bir ilana yapıldığını ve durumunun 'pending' olduğunu doğrula
+                string checkSql = @"
+                    SELECT b.listing_id
+                    FROM bookings b
+                    JOIN listings l ON b.listing_id = l.id
+                    WHERE b.id = @booking_id AND l.user_id = @host_user_id AND b.status = 'pending';
+                ";
+                int? listingOwnerCheck = null;
+                using (NpgsqlCommand checkCommand = new NpgsqlCommand(checkSql, connection))
+                {
+                    checkCommand.Parameters.AddWithValue("@booking_id", bookingId);
+                    checkCommand.Parameters.AddWithValue("@host_user_id", hostUserId);
+                    var result = await checkCommand.ExecuteScalarAsync();
+                    if (result != null && result != DBNull.Value)
+                    {
+                        listingOwnerCheck = Convert.ToInt32(result);
+                    }
+                }
+
+                if (listingOwnerCheck == null)
+                {
+                    _logger.LogWarning("ConfirmBooking: BookingId {BookingId} not found for host {HostUserId}, or not in 'pending' state, or host does not own the listing.", bookingId, hostUserId);
+                    TempData["ErrorMessage"] = "Onaylanacak rezervasyon bulunamadı, size ait olmayabilir veya zaten işlem görmüş olabilir.";
+                    return RedirectToAction(nameof(pendingReservations));
+                }
+
+                // 2. Rezervasyon durumunu 'confirmed' olarak güncelle
+                string updateSql = "UPDATE bookings SET status = 'confirmed' WHERE id = @booking_id;";
+                using (NpgsqlCommand updateCommand = new NpgsqlCommand(updateSql, connection))
+                {
+                    updateCommand.Parameters.AddWithValue("@booking_id", bookingId);
+                    int rowsAffected = await updateCommand.ExecuteNonQueryAsync();
+                    if (rowsAffected > 0)
+                    {
+                        _logger.LogInformation("ConfirmBooking: BookingId {BookingId} status successfully updated to 'confirmed' by host {HostUserId}.", bookingId, hostUserId);
+                        TempData["SuccessMessage"] = $"Rezervasyon (ID: {bookingId}) başarıyla onaylandı.";
+                    }
+                    else
+                    {
+                        _logger.LogWarning("ConfirmBooking: Failed to update status for BookingId {BookingId}. No rows affected.", bookingId);
+                        TempData["ErrorMessage"] = "Rezervasyon onaylanırken bir sorun oluştu (güncelleme başarısız).";
+                    }
+                }
+            }
+        }
+        catch (NpgsqlException pgEx)
+        {
+            _logger.LogError(pgEx, "ConfirmBooking NpgsqlException for BookingId: {BookingId}, HostId: {HostUserId}. Error: {ErrorMessage}", bookingId, hostUserId, pgEx.Message);
+            TempData["ErrorMessage"] = "Rezervasyon onaylanırken bir veritabanı hatası oluştu.";
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "ConfirmBooking Generic Exception for BookingId: {BookingId}, HostId: {HostUserId}. Error: {ErrorMessage}", bookingId, hostUserId, ex.Message);
+            TempData["ErrorMessage"] = "Rezervasyon onaylanırken beklenmedik bir hata oluştu.";
+        }
+
+        return RedirectToAction(nameof(pendingReservations));
+    }
+
+    [HttpPost]
+    [ValidateAntiForgeryToken]
+    [Authorize(Roles = "host")]
+    public async Task<IActionResult> RejectBooking(int bookingId)
+    {
+        _logger.LogInformation("RejectBooking POST action started for BookingId: {BookingId}", bookingId);
+        var hostUserIdString = User.FindFirstValue(ClaimTypes.NameIdentifier);
+        if (string.IsNullOrEmpty(hostUserIdString) || !int.TryParse(hostUserIdString, out int hostUserId))
+        {
+            _logger.LogWarning("RejectBooking: Host User ID could not be parsed or was null/empty.");
+            TempData["ErrorMessage"] = "Oturumunuz bulunamadı veya geçersiz.";
+            return RedirectToAction(nameof(pendingReservations));
+        }
+        _logger.LogInformation("RejectBooking: Host User ID {HostUserId} successfully parsed.", hostUserId);
+
+        string connectionString = _configuration.GetConnectionString("DefaultConnection");
+        try
+        {
+            using (NpgsqlConnection connection = new NpgsqlConnection(connectionString))
+            {
+                await connection.OpenAsync();
+                // 1. Rezervasyonun host'a ait bir ilana yapıldığını ve durumunun 'pending' olduğunu doğrula
+                string checkSql = @"
+                    SELECT b.listing_id
+                    FROM bookings b
+                    JOIN listings l ON b.listing_id = l.id
+                    WHERE b.id = @booking_id AND l.user_id = @host_user_id AND b.status = 'pending';
+                ";
+                int? listingOwnerCheck = null;
+                using (NpgsqlCommand checkCommand = new NpgsqlCommand(checkSql, connection))
+                {
+                    checkCommand.Parameters.AddWithValue("@booking_id", bookingId);
+                    checkCommand.Parameters.AddWithValue("@host_user_id", hostUserId);
+                    var result = await checkCommand.ExecuteScalarAsync();
+                    if (result != null && result != DBNull.Value)
+                    {
+                        listingOwnerCheck = Convert.ToInt32(result);
+                    }
+                }
+
+                if (listingOwnerCheck == null)
+                {
+                    _logger.LogWarning("RejectBooking: BookingId {BookingId} not found for host {HostUserId}, or not in 'pending' state, or host does not own the listing.", bookingId, hostUserId);
+                    TempData["ErrorMessage"] = "Reddedilecek rezervasyon bulunamadı, size ait olmayabilir veya zaten işlem görmüş olabilir.";
+                    return RedirectToAction(nameof(pendingReservations));
+                }
+
+                // 2. Rezervasyon durumunu 'cancelled' olarak güncelle
+                string updateSql = "UPDATE bookings SET status = 'cancelled' WHERE id = @booking_id;";
+                using (NpgsqlCommand updateCommand = new NpgsqlCommand(updateSql, connection))
+                {
+                    updateCommand.Parameters.AddWithValue("@booking_id", bookingId);
+                    int rowsAffected = await updateCommand.ExecuteNonQueryAsync();
+                    if (rowsAffected > 0)
+                    {
+                        _logger.LogInformation("RejectBooking: BookingId {BookingId} status successfully updated to 'cancelled' by host {HostUserId}.", bookingId, hostUserId);
+                        TempData["SuccessMessage"] = $"Rezervasyon (ID: {bookingId}) başarıyla reddedildi.";
+                    }
+                    else
+                    {
+                        _logger.LogWarning("RejectBooking: Failed to update status for BookingId {BookingId}. No rows affected.", bookingId);
+                        TempData["ErrorMessage"] = "Rezervasyon reddedilirken bir sorun oluştu (güncelleme başarısız).";
+                    }
+                }
+            }
+        }
+        catch (NpgsqlException pgEx)
+        {
+            _logger.LogError(pgEx, "RejectBooking NpgsqlException for BookingId: {BookingId}, HostId: {HostUserId}. Error: {ErrorMessage}", bookingId, hostUserId, pgEx.Message);
+            TempData["ErrorMessage"] = "Rezervasyon reddedilirken bir veritabanı hatası oluştu.";
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "RejectBooking Generic Exception for BookingId: {BookingId}, HostId: {HostUserId}. Error: {ErrorMessage}", bookingId, hostUserId, ex.Message);
+            TempData["ErrorMessage"] = "Rezervasyon reddedilirken beklenmedik bir hata oluştu.";
+        }
+
+        return RedirectToAction(nameof(pendingReservations));
+    }
+
+    [HttpPost]
+    [ValidateAntiForgeryToken]
+    [Authorize(Roles = "host")]
+    public async Task<IActionResult> CancelBookingByHost(int bookingId)
+    {
+        _logger.LogInformation("CancelBookingByHost POST action started for BookingId: {BookingId}", bookingId);
+        var hostUserIdString = User.FindFirstValue(ClaimTypes.NameIdentifier);
+        if (string.IsNullOrEmpty(hostUserIdString) || !int.TryParse(hostUserIdString, out int hostUserId))
+        {
+            _logger.LogWarning("CancelBookingByHost: Host User ID could not be parsed or was null/empty.");
+            TempData["ErrorMessage"] = "Oturumunuz bulunamadı veya geçersiz.";
+            return RedirectToAction(nameof(activeReservations)); // Aktif rezervasyonlar sayfasına yönlendir
+        }
+        _logger.LogInformation("CancelBookingByHost: Host User ID {HostUserId} successfully parsed.", hostUserId);
+
+        string connectionString = _configuration.GetConnectionString("DefaultConnection");
+        try
+        {
+            using (NpgsqlConnection connection = new NpgsqlConnection(connectionString))
+            {
+                await connection.OpenAsync();
+                // 1. Rezervasyonun host'a ait bir ilana yapıldığını ve durumunun 'confirmed' olduğunu doğrula
+                string checkSql = @"
+                    SELECT b.listing_id
+                    FROM bookings b
+                    JOIN listings l ON b.listing_id = l.id
+                    WHERE b.id = @booking_id AND l.user_id = @host_user_id AND b.status = 'confirmed';
+                ";
+                int? listingOwnerCheck = null;
+                using (NpgsqlCommand checkCommand = new NpgsqlCommand(checkSql, connection))
+                {
+                    checkCommand.Parameters.AddWithValue("@booking_id", bookingId);
+                    checkCommand.Parameters.AddWithValue("@host_user_id", hostUserId);
+                    var result = await checkCommand.ExecuteScalarAsync();
+                    if (result != null && result != DBNull.Value)
+                    {
+                        listingOwnerCheck = Convert.ToInt32(result);
+                    }
+                }
+
+                if (listingOwnerCheck == null)
+                {
+                    _logger.LogWarning("CancelBookingByHost: BookingId {BookingId} not found for host {HostUserId}, or not in 'confirmed' state, or host does not own the listing.", bookingId, hostUserId);
+                    TempData["ErrorMessage"] = "İptal edilecek rezervasyon bulunamadı, size ait olmayabilir veya zaten iptal edilmiş/farklı bir durumda olabilir.";
+                    return RedirectToAction(nameof(activeReservations));
+                }
+
+                // 2. Rezervasyon durumunu 'cancelled' olarak güncelle
+                string updateSql = "UPDATE bookings SET status = 'cancelled' WHERE id = @booking_id;";
+                using (NpgsqlCommand updateCommand = new NpgsqlCommand(updateSql, connection))
+                {
+                    updateCommand.Parameters.AddWithValue("@booking_id", bookingId);
+                    int rowsAffected = await updateCommand.ExecuteNonQueryAsync();
+                    if (rowsAffected > 0)
+                    {
+                        _logger.LogInformation("CancelBookingByHost: BookingId {BookingId} status successfully updated to 'cancelled' by host {HostUserId}.", bookingId, hostUserId);
+                        TempData["SuccessMessage"] = $"Rezervasyon başarıyla iptal edildi.";
+                    }
+                    else
+                    {
+                        _logger.LogWarning("CancelBookingByHost: Failed to update status for BookingId {BookingId}. No rows affected.", bookingId);
+                        TempData["ErrorMessage"] = "Rezervasyon iptal edilirken bir sorun oluştu (güncelleme başarısız).";
+                    }
+                }
+            }
+        }
+        catch (NpgsqlException pgEx)
+        {
+            _logger.LogError(pgEx, "CancelBookingByHost NpgsqlException for BookingId: {BookingId}, HostId: {HostUserId}. Error: {ErrorMessage}", bookingId, hostUserId, pgEx.Message);
+            TempData["ErrorMessage"] = "Rezervasyon iptal edilirken bir veritabanı hatası oluştu.";
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "CancelBookingByHost Generic Exception for BookingId: {BookingId}, HostId: {HostUserId}. Error: {ErrorMessage}", bookingId, hostUserId, ex.Message);
+            TempData["ErrorMessage"] = "Rezervasyon iptal edilirken beklenmedik bir hata oluştu.";
+        }
+
+        return RedirectToAction(nameof(activeReservations)); // Veya reservationHistory'ye de yönlendirilebilir.
+    }
 }

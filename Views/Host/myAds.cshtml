@@ -17,11 +17,13 @@
         <!-- Sol Menü -->
         <div class="col-md-3 sidebarS">
             <button class="btn-login" onclick="window.location.href='@Url.Action("myAds", "Host")'">İlanlarım</button>
+            <button class="btn-login" onclick="window.location.href='@Url.Action("pendingReservations", "Host")'">Onay Bekleyen Rezervasyonlar</button>
             <button class="btn-login" onclick="window.location.href='@Url.Action("activeReservations", "Host")'">Aktif Rezervasyonlarım</button>
             <button class="btn-login" onclick="window.location.href='@Url.Action("reservationHistory", "Host")'">Geçmiş Rezervasyonlarım</button>
             <button class="btn-login" onclick="window.location.href='@Url.Action("newAd", "Host")'">Yeni İlan Ver</button>
             <button class="btn-login" onclick="window.location.href='@Url.Action("settings", "Host")'">Ayarlar</button>
             <button class="btn-login" id="btn-quit" onclick="window.location.href='@Url.Action("Logout", "Account")'">Çıkış Yap</button>
+
         </div>
 
         <!-- Sağ İçerik Alanı -->
@@ -106,9 +108,24 @@
                                                     <i class="bi bi-pencil"></i>
                                                 </a>
 
-                                                <button class="btn btn-outline-warning btn-sm" title="Görünürlükten Kaldır" disabled>
-                                                    <i class="bi bi-eye-slash"></i>
-                                                </button>
+                                                @if (ilan.IsActive)
+                                                {
+                                                    <button class="btn btn-outline-warning btn-sm toggle-visibility-btn"
+                                                            title="Görünürlükten Kaldır"
+                                                            data-id="@ilan.Id"
+                                                            data-current-isactive="true">
+                                                        <i class="bi bi-eye-slash"></i>
+                                                    </button>
+                                                }
+                                                else
+                                                {
+                                                    <button class="btn btn-outline-success btn-sm toggle-visibility-btn"
+                                                            title="Görünür Yap"
+                                                            data-id="@ilan.Id"
+                                                            data-current-isactive="false">
+                                                        <i class="bi bi-eye"></i>
+                                                    </button>
+                                                }
                                             </div>
                                         </div>
                                     </div>
@@ -152,6 +169,140 @@
                         button.innerHTML = originalHtml;
                     });
                 }
+            });
+        });
+
+        // Yeni eklenen görünürlük ayarlama script'i
+        document.querySelectorAll('.toggle-visibility-btn').forEach(button => {
+            button.addEventListener('click', function (event) {
+                event.preventDefault(); 
+
+                const ilanId = this.dataset.id;
+                const buttonElement = this; 
+                const originalButtonHtml = buttonElement.innerHTML;
+                const originalTitle = buttonElement.title;
+
+                const currentIsActive = buttonElement.dataset.currentIsactive === 'true';
+                const targetIsActive = !currentIsActive;
+
+                const actionVerb = targetIsActive ? "görünür yapmak" : "gizlemek";
+                const confirmMessage = `Bu ilanı ${actionVerb} istediğinizden emin misiniz?`;
+                const processingText = targetIsActive ? "Görünür yapılıyor" : "Gizleniyor";
+
+                if (!confirm(confirmMessage)) {
+                    return;
+                }
+                
+                buttonElement.disabled = true;
+                buttonElement.innerHTML = `<span class="spinner-border spinner-border-sm me-1" role="status" aria-hidden="true"></span> ${processingText}...`;
+
+                const tokenInput = document.querySelector('form.delete-form input[name="__RequestVerificationToken"]');
+                const token = tokenInput ? tokenInput.value : null;
+                
+                const headers = { 'Content-Type': 'application/json' };
+                if (token) {
+                    headers['RequestVerificationToken'] = token;
+                } else {
+                    console.warn('Anti-forgery token bulunamadı. Form gönderimleri başarısız olabilir.');
+                }
+
+                fetch(`@Url.Action("SetAdVisibility", "Host")`, {
+                    method: 'POST',
+                    headers: headers,
+                    body: JSON.stringify({ id: parseInt(ilanId), isActive: targetIsActive })
+                })
+                .then(async response => {
+                    const responseBodyText = await response.text(); // Yanıtı ÖNCE metin olarak oku
+                    let responseData = null;
+                    let isJson = false;
+                    try {
+                        responseData = JSON.parse(responseBodyText); // Metni JSON olarak ayrıştırmayı dene
+                        isJson = true;
+                    } catch (e) {
+                        // JSON değilse veya ayrıştırma hatası varsa, responseData null kalır
+                        console.warn('Sunucu yanıtı JSON formatında değil. Yanıt metni:', responseBodyText);
+                    }
+
+                    if (response.ok) { // HTTP 2xx durum kodları için
+                        if (isJson) {
+                            return { successData: responseData, status: response.status };
+                        } else {
+                            // Yanıt başarılı (2xx) ama JSON değilse. Bu beklenmedik bir durum.
+                            console.error(`Başarılı yanıt (HTTP ${response.status}) JSON formatında değildi. Yanıt Metni:`, responseBodyText);
+                            return Promise.reject({ message: `Sunucudan gelen başarılı yanıt (HTTP ${response.status}) JSON formatında değildi, metin içeriği konsola yazıldı.` });
+                        }
+                    } else {
+                        // HTTP hata durumları için (4xx, 5xx)
+                        let errorPayload = { message: `Sunucu hatası: ${response.status}.`, status: response.status, responseText: responseBodyText };
+                        if (isJson && responseData) {
+                            // Sunucudan gelen JSON içindeki mesajı veya diğer alanları kullan
+                            errorPayload.message = responseData.message || errorPayload.message; 
+                            // responseData içindeki diğer alanları da errorPayload'a ekleyebiliriz.
+                            errorPayload = { ...errorPayload, ...responseData};
+                        } else {
+                             // JSON değilse veya responseData boşsa, ham metni kullan
+                             errorPayload.message = responseBodyText || errorPayload.message;
+                        }
+                        console.error(`Sunucu hatası (HTTP ${response.status}). Yanıt:`, responseBodyText, 'İşlenmiş Hata:', errorPayload);
+                        return Promise.reject(errorPayload);
+                    }
+                })
+                .then(result => {
+                    const data = result.successData;
+                    // Sunucudan dönen isActive durumunun, bizim gönderdiğimiz targetIsActive ile eşleştiğini kontrol et
+                    if (data.success && typeof data.isActive !== 'undefined' && data.isActive === targetIsActive) {
+                        const newIsActive = data.isActive;
+                        alert(newIsActive ? 'İlan başarıyla görünür yapıldı.' : 'İlan başarıyla gizlendi.');
+                        
+                        buttonElement.dataset.currentIsactive = newIsActive.toString();
+
+                        if (newIsActive) { // İlan artık AKTİF (önceden pasifti, şimdi aktif yapıldı)
+                            buttonElement.innerHTML = '<i class="bi bi-eye-slash"></i>';
+                            buttonElement.title = "Görünürlükten Kaldır";
+                            buttonElement.classList.remove('btn-outline-success');
+                            buttonElement.classList.add('btn-outline-warning');
+                        } else { // İlan artık PASİF (önceden aktifti, şimdi gizlendi)
+                            buttonElement.innerHTML = '<i class="bi bi-eye"></i>';
+                            buttonElement.title = "Görünür Yap";
+                            buttonElement.classList.remove('btn-outline-warning');
+                            buttonElement.classList.add('btn-outline-success');
+                        }
+                    } else {
+                        let message = 'İlan durumu güncellenirken bir hata oluştu.';
+                        if (data && data.message) {
+                             message = data.message;
+                        } else if (data && typeof data.isActive !== 'undefined'){
+                            message = `Sunucu yanıtı (${data.isActive}) beklenen (${targetIsActive}) ile eşleşmiyor.`;
+                        } else if (result && result.status && result.status !== 200){
+                            message = `Sunucu hatası: ${result.status}. Yanıt: ${result.responseText || 'Boş'}`;
+                        }
+                        alert(message);
+                        buttonElement.innerHTML = originalButtonHtml; 
+                        buttonElement.title = originalTitle;
+                    }
+                    buttonElement.disabled = false; // İşlem sonrası butonu tekrar aktif et
+                })
+                .catch(error => {
+                    console.error('Görünürlük ayarlama işlemi sırasında hata:', error);
+                    let errorMessage = 'İlan görünürlüğü ayarlanırken bir hata oluştu.';
+
+                    if (error && error.message) { 
+                        errorMessage = error.message;
+                    } else if (error && typeof error === 'object') { 
+                        try {
+                            errorMessage = `Hata: ${JSON.stringify(error)}`;
+                        } catch (e) {
+                            errorMessage = 'İlan görünürlüğü ayarlanırken karmaşık bir hata oluştu. Detaylar konsolda olabilir.';
+                        }
+                    } else if (typeof error === 'string') { 
+                        errorMessage = error;
+                    }
+                
+                    alert(errorMessage);
+                    buttonElement.innerHTML = originalButtonHtml;
+                    buttonElement.title = originalTitle;
+                    buttonElement.disabled = false;
+                });
             });
         });
     });

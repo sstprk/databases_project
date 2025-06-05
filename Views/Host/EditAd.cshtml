@@ -113,7 +113,26 @@
 @section Scripts {
     @{await Html.RenderPartialAsync("_ValidationScriptsPartial");}
     <script>
-        
+        function previewImage(event) {
+            var reader = new FileReader();
+            var imageField = document.getElementById("imagePreview");
+            var currentImageField = document.getElementById("currentImage");
+            
+            reader.onload = function(){
+                if (reader.readyState === 2) {
+                    imageField.src = reader.result;
+                    imageField.style.display = 'block';
+                    if (currentImageField) currentImageField.style.display = 'none'; // Yeni resim seçilince mevcut resmi gizle
+                }
+            }
+            if(event.target.files[0]){
+                reader.readAsDataURL(event.target.files[0]);
+            } else {
+                imageField.src = "#";
+                imageField.style.display = 'none';
+                 if (currentImageField) currentImageField.style.display = 'block'; // Seçim kaldırılırsa mevcut resmi geri göster
+            }
+        }
 
         function confirmDelete(adId) {
             if (confirm("Bu ilanı silmek istediğinizden emin misiniz? Bu işlem geri alınamaz.")) {
