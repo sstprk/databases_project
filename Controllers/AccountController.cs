@@ -13,6 +13,9 @@ using Npgsql;
 using System.Data;
 using Microsoft.AspNetCore.Authorization;
 using realCabinly.Models;
+using MailKit.Net.Smtp;
+using MailKit.Security;
+using MimeKit;
 
 namespace realCabinly.Controllers
 {
@@ -26,6 +29,7 @@ namespace realCabinly.Controllers
             _logger = logger;
             _configuration = configuration;
         }
+
 
         [HttpGet]
         public IActionResult Login()
@@ -579,6 +583,141 @@ namespace realCabinly.Controllers
             }
             // Her durumda Settings view'ını model ile ve güncel ViewBag mesajlarıyla döndür
             return View("Settings", model);
+        }
+
+        [HttpGet]
+        public IActionResult ForgotPassword()
+        {
+            return View();
+        }
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> ForgotPassword(string email)
+        {
+            if (string.IsNullOrEmpty(email))
+            {
+                ModelState.AddModelError("", "E-posta adresi gereklidir.");
+                return View();
+            }
+
+            try
+            {
+                string connectionString = _configuration.GetConnectionString("DefaultConnection");
+                bool userExists = false;
+
+                string query = "SELECT COUNT(1) FROM users WHERE LOWER(email) = LOWER(@Email)";
+                await using (var connection = new NpgsqlConnection(connectionString))
+                {
+                    await connection.OpenAsync();
+                    await using (var command = new NpgsqlCommand(query, connection))
+                    {
+                        command.Parameters.AddWithValue("@Email", email.ToLower());
+                        userExists = Convert.ToInt32(await command.ExecuteScalarAsync()) > 0;
+                    }
+                }
+
+                if (userExists)
+                {
+                    // E-posta gönderme işlemi
+                    var message = new MimeMessage();
+                    message.From.Add(new MailboxAddress("Cabinly", "cabinlyauth@gmail.com")); // Gönderen e-posta adresi
+                    message.To.Add(new MailboxAddress("", email));
+                    message.Subject = "Şifre Sıfırlama";
+                    message.Body = new TextPart("plain")
+                    {
+                        Text = "Merhaba,\n\n" +
+                              "Şifrenizi sıfırlamak için aşağıdaki bağlantıya tıklayın:\n" +
+                              "http://localhost:5006/Account/ResetPassword?email=" + email + "\n\n" +
+                              "Bu işlemi siz yapmadıysanız, lütfen bu e-postayı dikkate almayın.\n\n" +
+                              "Saygılarımızla,\nCabinly Ekibi"
+                    };
+
+                    using (var client = new SmtpClient())
+                    {
+                        await client.ConnectAsync("smtp.gmail.com", 587, SecureSocketOptions.StartTls);
+                        await client.AuthenticateAsync("cabinlyauth@gmail.com", "ouoy kawo thtu cfpr"); // Gmail uygulama şifresi
+                        await client.SendAsync(message);
+                        await client.DisconnectAsync(true);
+                    }
+
+                    TempData["SuccessMessage"] = "Şifre sıfırlama bağlantısı e-posta adresinize gönderildi.";
+                    return RedirectToAction("Login");
+                }
+                else
+                {
+                    ModelState.AddModelError("", "Bu e-posta adresi ile kayıtlı bir kullanıcı bulunamadı.");
+                    return View();
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Şifre sıfırlama işlemi sırasında hata oluştu. Email: {Email}", email);
+                ModelState.AddModelError("", "Bir hata oluştu. Lütfen daha sonra tekrar deneyin.");
+                return View();
+            }
+        }
+
+        [HttpGet]
+        public IActionResult ResetPassword(string email)
+        {
+            if (string.IsNullOrEmpty(email))
+            {
+                return RedirectToAction("Login");
+            }
+            ViewBag.Email = email;
+            return View();
+        }
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> ResetPassword(string email, string newPassword, string confirmPassword)
+        {
+            if (string.IsNullOrEmpty(email) || string.IsNullOrEmpty(newPassword) || string.IsNullOrEmpty(confirmPassword))
+            {
+                ModelState.AddModelError("", "Tüm alanlar gereklidir.");
+                return View();
+            }
+
+            if (newPassword != confirmPassword)
+            {
+                ModelState.AddModelError("", "Şifreler eşleşmiyor.");
+                return View();
+            }
+
+            try
+            {
+                string connectionString = _configuration.GetConnectionString("DefaultConnection");
+                string updateQuery = "UPDATE users SET password_hash = @NewPassword WHERE LOWER(email) = LOWER(@Email)";
+                
+                await using (var connection = new NpgsqlConnection(connectionString))
+                {
+                    await connection.OpenAsync();
+                    await using (var command = new NpgsqlCommand(updateQuery, connection))
+                    {
+                        command.Parameters.AddWithValue("@NewPassword", newPassword);
+                        command.Parameters.AddWithValue("@Email", email);
+                        int rowsAffected = await command.ExecuteNonQueryAsync();
+
+                        if (rowsAffected > 0)
+                        {
+                            TempData["SuccessMessage"] = "Şifreniz başarıyla güncellendi. Yeni şifrenizle giriş yapabilirsiniz.";
+                            return RedirectToAction("Login");
+                        }
+                        else
+                        {
+                            ModelState.AddModelError("", "Şifre güncellenirken bir hata oluştu.");
+                            return View();
+                        }
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Şifre sıfırlama işlemi sırasında hata oluştu. Email: {Email}", email);
+                ModelState.AddModelError("", "Bir hata oluştu. Lütfen daha sonra tekrar deneyin.");
+                return View();
+            }
         }
     }
 }

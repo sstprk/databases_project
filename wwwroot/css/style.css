@@ -2,14 +2,13 @@
 body {
   background: #f7f7f7;
   font-family: 'Arial', sans-serif;
-  display: flex;
-  flex-direction: column;
-  justify-content: center; /* Dikeyde ortalama */
-  align-items: center; /* Yatayda ortalama */
   margin: 0;
   padding: 0;
-  overflow-y: auto; /* İçerik sığmazsa kaydırma ekler */
+  overflow-y: auto;
   min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
 }
 
 /* Navbar özelleştirmeleri */
@@ -254,114 +253,169 @@ height: 100%;
   padding-left: 20px;
 }
 
-
-.search-container {
-  margin: 120px 10px auto; /* Üstten 80px, alttan 80px, yanlardan auto (merkezleme) */
-  padding: 20px;
-  background: linear-gradient(135deg, #00B0B9, #FFD082); /* Hafif soluk versiyon */
-  backdrop-filter: blur(10px);
-  border-radius: 12px;
-  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
-  max-width: 1200px; /* Maksimum genişlik */
-  width: 65%; /* Ekran boyutuna göre genişlik */
+/* Ortak Genişlik Stili */
+.custom-container {
+    max-width: 900px;
+    width: 85%;
+    margin: 120px auto 50px auto;
+    position: relative;
+    left: 50%;
+    transform: translateX(-50%);
 }
 
+/* Arama Kutusu Stilleri */
+.search-container {
+    margin: 0;
+    padding: 25px 30px;
+    background: linear-gradient(135deg, #00B0B9, #FFD082);
+    backdrop-filter: blur(10px);
+    border-radius: 12px;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+    width: 100%;
+}
 
 .search-container h2 {
-  color: white;
-  text-align: center;
-  margin-bottom: 20px;
-  font-size: 24px;
+    color: white;
+    text-align: center;
+    margin-bottom: 25px;
+    font-size: 22px;
+    font-weight: 600;
+    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
 }
 
 .search-form {
-  display: flex;
-  justify-content: space-between;
-  gap: 20px;
-  flex-wrap: wrap; /* Elemanların alt alta gelmesini sağlar */
+    display: flex;
+    justify-content: flex-start;
+    gap: 15px;
+    flex-wrap: wrap;
+    align-items: center;
+    position: relative;
+    padding-bottom: 60px; /* Buton için daha fazla boşluk */
 }
 
 .search-form input,
-.search-form select,
-.search-form button {
-  padding: 10px;
-  font-size: 16px;
-  border-radius: 8px;
-  border: 1px solid #ddd;
+.search-form select {
+    padding: 12px 18px;
+    font-size: 15px;
+    border-radius: 8px;
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    background: rgba(255, 255, 255, 0.9);
+    color: #333;
+    height: 46px;
+    transition: all 0.3s ease;
+    margin: 0;
+}
+
+.search-form input:focus,
+.search-form select:focus {
+    outline: none;
+    border-color: #00B0B9;
+    box-shadow: 0 0 0 2px rgba(0, 176, 185, 0.2);
+    background: white;
 }
 
 .search-form input[type="text"] {
-  width: 40%;
+    width: 35%;
+    margin-top: 0;
 }
 
 .search-form select {
-  width: 20%;
+    width: 15%;
+    cursor: pointer;
+}
+
+.dates-container {
+    display: flex;
+    gap: 15px;
+    width: 35%;
 }
 
 .search-form input[type="date"] {
-  width: 45%;
+    width: 100%;
+    cursor: pointer;
 }
 
 .search-form button {
-  background-color: #00B0B9;
-  color: white;
-  border: none;
-  cursor: pointer;
-  width: 15%;
+    background-color: #008C8C;
+    color: white;
+    border: none;
+    cursor: pointer;
+    width: 130px;
+    height: 46px;
+    font-weight: 500;
+    font-size: 15px;
+    border-radius: 8px;
+    transition: all 0.3s ease;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    position: absolute;
+    right: 0;
+    bottom: 0;
+    margin-right: 5px; /* Sağ margin */
+    margin-bottom: 5px; /* Alt margin */
 }
 
 .search-form button:hover {
-  background-color: #008C8C;
+    background-color: #006666;
+    transform: translateY(-1px);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
 }
 
 .search-form input[type="text"]::placeholder {
-  color: #7F8C8D;
+    color: #999;
 }
 
 /* Duyarlı Tasarım */
 @media (max-width: 768px) {
-  .search-container {
-    width: 95%; /* Mobilde biraz daha geniş */
-  }
+    .search-container {
+        width: 95%; /* Mobilde biraz daha geniş */
+    }
 
-  .search-form input[type="text"],
-  .search-form select,
-  .search-form input[type="date"],
-  .search-form button {
-    width: 100%; /* Elemanları alt alta getirmek için */
-    margin-bottom: 10px; /* Alt kısımlara boşluk */
-  }
+    .search-form input[type="text"],
+    .search-form select,
+    .search-form input[type="date"],
+    .search-form button {
+        width: 100%; /* Elemanları alt alta getirmek için */
+        margin-bottom: 10px; /* Alt kısımlara boşluk */
+    }
 
-  .search-form {
-    gap: 10px; /* Flexbox arası boşluk */
-  }
+    .search-form {
+        gap: 10px; /* Flexbox arası boşluk */
+    }
 
-  /* Gidiş ve dönüş tarihini yan yana yerleştir */
-  .search-form .dates-container {
-    display: flex;
-    gap: 20px;
-    width: 100%;
-  }
+    /* Gidiş ve dönüş tarihini yan yana yerleştir */
+    .search-form .dates-container {
+        display: flex;
+        gap: 20px;
+        width: 100%;
+    }
 
-  .search-form .dates-container input[type="date"] {
-    width: 48%; /* Her iki tarihe de genişlik ver */
-  }
+    .search-form .dates-container input[type="date"] {
+        width: 48%; /* Her iki tarihe de genişlik ver */
+    }
 }
+
 #carouselExampleControls {
-  max-width: 1100px; /* Carousel'in maksimum genişliği */
-  margin: 50px auto; /* Ortalamak için */
+    margin: 20px 0; /* Sadece üst ve alt margin */
+    width: 100%; /* Container genişliğine göre ayarla */
+    border-radius: 12px;
+    overflow: hidden;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
 }
-
 
 .carousel-inner {
-  overflow: hidden; /* Fazla alanları gizler */
+    overflow: hidden; /* Fazla alanları gizler */
 }
 
 .carousel-inner img {
-  width: 100%; /* Resimler her zaman kapsayıcının genişliğine uyar */
-  height: 100%; /* Resimler yüksekliğini kapsayıcıya göre ayarlar */
-  object-fit: cover; /* Resimler orantılı şekilde sığdırılır */
+    width: 100%; /* Resimler her zaman kapsayıcının genişliğine uyar */
+    height: 100%; /* Resimler yüksekliğini kapsayıcıya göre ayarlar */
+    object-fit: cover; /* Resimler orantılı şekilde sığdırılır */
 }
+
 .login-btn {
   background-color: #00B0B9; /* Ana renk: Su yeşili */
   color: white; /* Yazı rengi beyaz */

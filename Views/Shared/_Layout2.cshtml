@@ -14,7 +14,7 @@
     <header>
         <nav class="navbar navbar-expand-lg navbar-custom">
     <div class="container-fluid">
-      <a class="navbar-brand" asp-controller="Host" asp-action="HostPage">Cabinly</a>
+      <a class="navbar-brand" asp-controller="@(User.IsInRole("host") ? "Host" : "Home")" asp-action="@(User.IsInRole("host") ? "HostPage" : "Index")">Cabinly</a>
   
       <div class="d-flex d-lg-none order-lg-last">
         <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarModern" aria-controls="navbarModern" aria-expanded="false" aria-label="Menüyü Aç/Kapa">
@@ -25,14 +25,14 @@
       <div class="collapse navbar-collapse" id="navbarModern">
         <ul class="navbar-nav me-auto mb-2 mb-lg-0">
           <li class="nav-item">
-            <a class="nav-link active" asp-controller="Host" asp-action="HostPage">Ana Sayfa</a>
+            <a class="nav-link active" asp-controller="@(User.IsInRole("host") ? "Host" : "Home")" asp-action="@(User.IsInRole("host") ? "HostPage" : "Index")">Ana Sayfa</a>
           </li>
           
           <li class="nav-item">
-            <a class="nav-link" asp-controller="Host" asp-action="HostAboutPage">Hakkımızda</a>
+            <a class="nav-link" asp-controller="@(User.IsInRole("host") ? "Host" : "Home")" asp-action="@(User.IsInRole("host") ? "HostAboutPage" : "About")">Hakkımızda</a>
           </li>
           <li class="nav-item">
-            <a class="nav-link" asp-controller="Host" asp-action="HostContactPage">İletişim</a>
+            <a class="nav-link" asp-controller="@(User.IsInRole("host") ? "Host" : "Home")" asp-action="@(User.IsInRole("host") ? "HostContactPage" : "Contact")">İletişim</a>
           </li>
         </ul>
         <div class="d-none d-lg-flex">
@@ -44,7 +44,7 @@
     </header>
 
     <main role="main" class="flex-shrink-0">
-        <div class="container">
+        <div class="container mt-5">
             @RenderBody()
         </div>
     </main>
@@ -59,9 +59,9 @@
         <div class="col-md-4 mb-3">
           <h6 class="fw-bold">Hızlı Erişim</h6>
           <ul class="list-unstyled">
-            <li><a asp-controller="Host" asp-action="HostPage" class="footer-link">Ana Sayfa</a></li>
-            <li><a asp-controller="Host" asp-action="HostAboutPage" class="footer-link">Hakkımızda</a></li>
-            <li><a asp-controller="Host" asp-action="HostContactPage" class="footer-link">İletişim</a></li>
+            <li><a asp-controller="@(User.IsInRole("host") ? "Host" : "Home")" asp-action="@(User.IsInRole("host") ? "HostPage" : "Index")" class="footer-link">Ana Sayfa</a></li>
+            <li><a asp-controller="@(User.IsInRole("host") ? "Host" : "Home")" asp-action="@(User.IsInRole("host") ? "HostAboutPage" : "About")" class="footer-link">Hakkımızda</a></li>
+            <li><a asp-controller="@(User.IsInRole("host") ? "Host" : "Home")" asp-action="@(User.IsInRole("host") ? "HostContactPage" : "Contact")" class="footer-link">İletişim</a></li>
           </ul>
         </div>
         <div class="col-md-4 mb-3">

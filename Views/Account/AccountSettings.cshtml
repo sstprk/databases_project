@@ -1,0 +1,40 @@
+@{
+    ViewData["Title"] = "Hesap Ayarları";
+    Layout = "~/Views/Shared/_Layout2.cshtml";
+}
+
+<div class="container">
+    <h2 class="mb-4">Hesap Ayarları</h2>
+    <div class="row">
+        <div class="col-md-3">
+            <div class="list-group">
+                <a href="#" class="list-group-item list-group-item-action active">Profil Bilgileri</a>
+                <a href="#" class="list-group-item list-group-item-action">Şifre Değiştir</a>
+                <a href="#" class="list-group-item list-group-item-action">Bildirim Ayarları</a>
+                <a href="#" class="list-group-item list-group-item-action">Gizlilik Ayarları</a>
+            </div>
+        </div>
+        <div class="col-md-9">
+            <div class="card">
+                <div class="card-body">
+                    <h5 class="card-title">Profil Bilgileri</h5>
+                    <form>
+                        <div class="mb-3">
+                            <label for="name" class="form-label">Ad Soyad</label>
+                            <input type="text" class="form-control" id="name" value="@User.Identity.Name">
+                        </div>
+                        <div class="mb-3">
+                            <label for="email" class="form-label">E-posta</label>
+                            <input type="email" class="form-control" id="email" value="@User.Identity.Name">
+                        </div>
+                        <div class="mb-3">
+                            <label for="phone" class="form-label">Telefon</label>
+                            <input type="tel" class="form-control" id="phone">
+                        </div>
+                        <button type="submit" class="btn btn-primary">Değişiklikleri Kaydet</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div> 

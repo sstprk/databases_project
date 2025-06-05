@@ -1,63 +1,35 @@
 @model realCabinly.Models.RegisterViewModel
 @{
     ViewData["Title"] = "Kayıt Ol";
-    Layout = "~/Views/Shared/_Layout.cshtml"; // Ana layout'u kullanıyoruz
+    Layout = "~/Views/Shared/_Layout.cshtml";
 }
 
-<div class="container mt-5 mb-5">
-    <div class="row justify-content-center">
-        <div class="col-lg-12 col-md-12">
-            <div class="card shadow-sm">
-                <div class="card-header bg-light py-3">
-                    <h2 class="text-center mb-0"><i class="fas fa-user-plus me-2"></i>Yeni Hesap Oluştur</h2>
-                </div>
-                <div class="card-body p-4 p-md-5">
-                    <form asp-controller="Account" asp-action="Register" method="post">
-                        @* CSRF token için ValidateAntiForgeryToken attribute'u controller'da olduğundan burada @Html.AntiForgeryToken() gerekmez *@
-                        
-                        <div asp-validation-summary="All" class="text-danger mb-3"></div> @* Tüm hataları göster *@
-
-                        <div class="mb-3">
-                            <label for="name" class="form-label fw-semibold">Adınız</label>
-                            <input type="text" name="name" class="form-control form-control-lg" id="name" placeholder="Adınızı girin" required>
-                        </div>
-
-                        <div class="mb-3">
-                            <label for="email" class="form-label fw-semibold">E-posta Adresiniz</label>
-                            <input type="email" name="email" class="form-control form-control-lg" id="email" placeholder="ornek@mail.com" required>
-                        </div>
-
-                        <div class="mb-3">
-                            <label for="password" class="form-label fw-semibold">Şifreniz</label>
-                            <input type="password" name="password" class="form-control form-control-lg" id="password" placeholder="••••••••" required>
-                        </div>
-
-                        <div class="mb-4">
-                            <label for="confirmPassword" class="form-label fw-semibold">Şifreniz (Tekrar)</label>
-                            <input type="password" name="confirmPassword" class="form-control form-control-lg" id="confirmPassword" placeholder="••••••••" required>
-                        </div>
-
-                        <div class="form-group">
-                            <label asp-for="Role">Rolünüz</label>
-                            <select asp-for="Role" class="form-control">
-                                <option value="">Rol Seçiniz...</option>
-                                <option value="guest">Kullanıcı</option>
-                                <option value="host">Ev Sahibi</option>
-                            </select>
-                            <span asp-validation-for="Role" class="text-danger"></span>
-                        </div>
-
-                        <div class="d-grid mb-3">
-                            <button type="submit" class="btn btn-primary btn-lg"><i class="fas fa-check-circle me-2"></i>Kayıt Ol</button>
-                        </div>
-                    </form>
-                    <hr>
-                    <div class="text-center">
-                        <p class="mb-0">Zaten bir hesabınız var mı? <a asp-action="Login" asp-controller="Account">Giriş Yapın</a></p>
-                    </div>
-                </div>
+<div class="login-container">
+    <h2>Kayıt Ol</h2>
+    <form asp-controller="Account" asp-action="Register" method="post">
+        <div asp-validation-summary="All" class="text-danger"></div>
+        
+        <input type="text" name="name" class="form-control" placeholder="Adınız" required>
+        <input type="email" name="email" class="form-control" placeholder="E-Posta adresiniz" required>
+        <input type="password" name="password" class="form-control" placeholder="Şifreniz" required>
+        <input type="password" name="confirmPassword" class="form-control" placeholder="Şifrenizi tekrar giriniz" required>
+        
+        <div class="form-group">
+            <label class="d-block mb-2">Hesap Türü</label>
+            <div class="form-check form-check-inline">
+                <input class="form-check-input" type="radio" name="role" id="guest" value="guest" checked>
+                <label class="form-check-label" for="guest">Kiracı</label>
+            </div>
+            <div class="form-check form-check-inline">
+                <input class="form-check-input" type="radio" name="role" id="host" value="host">
+                <label class="form-check-label" for="host">Host</label>
             </div>
         </div>
+
+        <button type="submit" class="btn-login">Kayıt Ol</button>
+    </form>
+    <div class="form-text">
+        <a asp-controller="Account" asp-action="Login">Zaten hesabınız var mı? Giriş yap</a>
     </div>
 </div>
 
