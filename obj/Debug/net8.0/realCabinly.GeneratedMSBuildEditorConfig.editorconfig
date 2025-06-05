@@ -1,0 +1,113 @@
+is_global = true
+build_property.TargetFramework = net8.0
+build_property.TargetPlatformMinVersion = 
+build_property.UsingMicrosoftNETSdkWeb = true
+build_property.ProjectTypeGuids = 
+build_property.InvariantGlobalization = 
+build_property.PlatformNeutralAssembly = 
+build_property.EnforceExtendedAnalyzerRules = 
+build_property._SupportedPlatformList = Linux,macOS,Windows
+build_property.RootNamespace = realCabinly
+build_property.RootNamespace = realCabinly
+build_property.ProjectDir = /Users/erenozyurek/VSCODE/databases_project/
+build_property.EnableComHosting = 
+build_property.EnableGeneratedComInterfaceComImportInterop = 
+build_property.RazorLangVersion = 8.0
+build_property.SupportLocalizedComponentNames = 
+build_property.GenerateRazorMetadataSourceChecksumAttributes = 
+build_property.MSBuildProjectDirectory = /Users/erenozyurek/VSCODE/databases_project
+build_property._RazorSourceGeneratorDebug = 
+build_property.EffectiveAnalysisLevelStyle = 8.0
+build_property.EnableCodeStyleSeverity = 
+
+[/Users/erenozyurek/VSCODE/databases_project/views/Account/Login.cshtml]
+build_metadata.AdditionalFiles.TargetPath = dmlld3MvQWNjb3VudC9Mb2dpbi5jc2h0bWw=
+build_metadata.AdditionalFiles.CssScope = 
+
+[/Users/erenozyurek/VSCODE/databases_project/views/Account/Register.cshtml]
+build_metadata.AdditionalFiles.TargetPath = dmlld3MvQWNjb3VudC9SZWdpc3Rlci5jc2h0bWw=
+build_metadata.AdditionalFiles.CssScope = 
+
+[/Users/erenozyurek/VSCODE/databases_project/views/Account/Settings.cshtml]
+build_metadata.AdditionalFiles.TargetPath = dmlld3MvQWNjb3VudC9TZXR0aW5ncy5jc2h0bWw=
+build_metadata.AdditionalFiles.CssScope = 
+
+[/Users/erenozyurek/VSCODE/databases_project/views/Home/About.cshtml]
+build_metadata.AdditionalFiles.TargetPath = dmlld3MvSG9tZS9BYm91dC5jc2h0bWw=
+build_metadata.AdditionalFiles.CssScope = 
+
+[/Users/erenozyurek/VSCODE/databases_project/views/Home/Ads.cshtml]
+build_metadata.AdditionalFiles.TargetPath = dmlld3MvSG9tZS9BZHMuY3NodG1s
+build_metadata.AdditionalFiles.CssScope = 
+
+[/Users/erenozyurek/VSCODE/databases_project/views/Home/Contact.cshtml]
+build_metadata.AdditionalFiles.TargetPath = dmlld3MvSG9tZS9Db250YWN0LmNzaHRtbA==
+build_metadata.AdditionalFiles.CssScope = 
+
+[/Users/erenozyurek/VSCODE/databases_project/views/Home/Index.cshtml]
+build_metadata.AdditionalFiles.TargetPath = dmlld3MvSG9tZS9JbmRleC5jc2h0bWw=
+build_metadata.AdditionalFiles.CssScope = 
+
+[/Users/erenozyurek/VSCODE/databases_project/views/Home/Privacy.cshtml]
+build_metadata.AdditionalFiles.TargetPath = dmlld3MvSG9tZS9Qcml2YWN5LmNzaHRtbA==
+build_metadata.AdditionalFiles.CssScope = 
+
+[/Users/erenozyurek/VSCODE/databases_project/views/Host/activeReservations.cshtml]
+build_metadata.AdditionalFiles.TargetPath = dmlld3MvSG9zdC9hY3RpdmVSZXNlcnZhdGlvbnMuY3NodG1s
+build_metadata.AdditionalFiles.CssScope = 
+
+[/Users/erenozyurek/VSCODE/databases_project/views/Host/hostAboutPage.cshtml]
+build_metadata.AdditionalFiles.TargetPath = dmlld3MvSG9zdC9ob3N0QWJvdXRQYWdlLmNzaHRtbA==
+build_metadata.AdditionalFiles.CssScope = 
+
+[/Users/erenozyurek/VSCODE/databases_project/views/Host/hostContactPage.cshtml]
+build_metadata.AdditionalFiles.TargetPath = dmlld3MvSG9zdC9ob3N0Q29udGFjdFBhZ2UuY3NodG1s
+build_metadata.AdditionalFiles.CssScope = 
+
+[/Users/erenozyurek/VSCODE/databases_project/views/Host/hostPage.cshtml]
+build_metadata.AdditionalFiles.TargetPath = dmlld3MvSG9zdC9ob3N0UGFnZS5jc2h0bWw=
+build_metadata.AdditionalFiles.CssScope = 
+
+[/Users/erenozyurek/VSCODE/databases_project/views/Host/myAds.cshtml]
+build_metadata.AdditionalFiles.TargetPath = dmlld3MvSG9zdC9teUFkcy5jc2h0bWw=
+build_metadata.AdditionalFiles.CssScope = 
+
+[/Users/erenozyurek/VSCODE/databases_project/views/Host/newAd.cshtml]
+build_metadata.AdditionalFiles.TargetPath = dmlld3MvSG9zdC9uZXdBZC5jc2h0bWw=
+build_metadata.AdditionalFiles.CssScope = 
+
+[/Users/erenozyurek/VSCODE/databases_project/views/Host/reservationHistory.cshtml]
+build_metadata.AdditionalFiles.TargetPath = dmlld3MvSG9zdC9yZXNlcnZhdGlvbkhpc3RvcnkuY3NodG1s
+build_metadata.AdditionalFiles.CssScope = 
+
+[/Users/erenozyurek/VSCODE/databases_project/views/Host/settings.cshtml]
+build_metadata.AdditionalFiles.TargetPath = dmlld3MvSG9zdC9zZXR0aW5ncy5jc2h0bWw=
+build_metadata.AdditionalFiles.CssScope = 
+
+[/Users/erenozyurek/VSCODE/databases_project/views/Shared/Error.cshtml]
+build_metadata.AdditionalFiles.TargetPath = dmlld3MvU2hhcmVkL0Vycm9yLmNzaHRtbA==
+build_metadata.AdditionalFiles.CssScope = 
+
+[/Users/erenozyurek/VSCODE/databases_project/views/Shared/_Layout2.cshtml]
+build_metadata.AdditionalFiles.TargetPath = dmlld3MvU2hhcmVkL19MYXlvdXQyLmNzaHRtbA==
+build_metadata.AdditionalFiles.CssScope = 
+
+[/Users/erenozyurek/VSCODE/databases_project/views/Shared/_ValidationScriptsPartial.cshtml]
+build_metadata.AdditionalFiles.TargetPath = dmlld3MvU2hhcmVkL19WYWxpZGF0aW9uU2NyaXB0c1BhcnRpYWwuY3NodG1s
+build_metadata.AdditionalFiles.CssScope = 
+
+[/Users/erenozyurek/VSCODE/databases_project/views/Users/deneme.cshtml]
+build_metadata.AdditionalFiles.TargetPath = dmlld3MvVXNlcnMvZGVuZW1lLmNzaHRtbA==
+build_metadata.AdditionalFiles.CssScope = 
+
+[/Users/erenozyurek/VSCODE/databases_project/views/_ViewImports.cshtml]
+build_metadata.AdditionalFiles.TargetPath = dmlld3MvX1ZpZXdJbXBvcnRzLmNzaHRtbA==
+build_metadata.AdditionalFiles.CssScope = 
+
+[/Users/erenozyurek/VSCODE/databases_project/views/_ViewStart.cshtml]
+build_metadata.AdditionalFiles.TargetPath = dmlld3MvX1ZpZXdTdGFydC5jc2h0bWw=
+build_metadata.AdditionalFiles.CssScope = 
+
+[/Users/erenozyurek/VSCODE/databases_project/views/Shared/_Layout.cshtml]
+build_metadata.AdditionalFiles.TargetPath = dmlld3MvU2hhcmVkL19MYXlvdXQuY3NodG1s
+build_metadata.AdditionalFiles.CssScope = b-o3quu27f2k
