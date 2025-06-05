@@ -1,0 +1,102 @@
+@model List<realCabinly.Controllers.PendingReservationViewModel>
+@{
+    Layout = "~/Views/Shared/_Layout2.cshtml";
+    ViewData["Title"] = "Onay Bekleyen Rezervasyonlar";
+}
+
+<div class="custom-container">
+    <div class="row">
+        <!-- Sol Menü -->
+        <div class="col-md-3 sidebarS">
+            <button class="btn-login" onclick="window.location.href='@Url.Action("myAds", "Host")'">İlanlarım</button>
+            <button class="btn-login active" onclick="window.location.href='@Url.Action("pendingReservations", "Host")'">Onay Bekleyen Rezervasyonlar</button>
+            <button class="btn-login" onclick="window.location.href='@Url.Action("activeReservations", "Host")'">Aktif Rezervasyonlarım</button>
+            <button class="btn-login" onclick="window.location.href='@Url.Action("reservationHistory", "Host")'">Geçmiş Rezervasyonlarım</button>
+            <button class="btn-login" onclick="window.location.href='@Url.Action("newAd", "Host")'">Yeni İlan Ver</button>
+            <button class="btn-login" onclick="window.location.href='@Url.Action("settings", "Host")'">Ayarlar</button>
+            <button class="btn-login" id="btn-quit" onclick="window.location.href='@Url.Action("Logout", "Account")'">Çıkış Yap</button>
+        </div>
+
+        <!-- Sağ İçerik Alanı -->
+        <div class="col-md-9 content-areaS" id="icerik">
+            <h2>Onay Bekleyen Rezervasyonlar</h2>
+
+            @if (ViewBag.ErrorMessage != null)
+            {
+                <div class="alert alert-danger" role="alert">
+                    @ViewBag.ErrorMessage
+                </div>
+            }
+
+            @if (Model == null || !Model.Any())
+            {
+                <div class="alert alert-info mt-3" role="alert">
+                    <i class="bi bi-info-circle-fill"></i> Şu anda onay bekleyen herhangi bir rezervasyon isteğiniz bulunmamaktadır.
+                </div>
+            }
+            else
+            {
+                <div class="row row-cols-1 row-cols-md-2 g-4 mt-3">
+                    @foreach (var booking in Model)
+                    {
+                        <div class="col">
+                            <div class="card h-100 shadow-sm pending-reservation-card">
+                                <div class="row g-0">
+                                    <div class="col-md-4">
+                                        <a href="@Url.Action("AdDetail", "Home", new { id = booking.ListingId })" target="_blank">
+                                            <img src="@Url.Content("~" + booking.ListingCoverImageUrl)" class="img-fluid rounded-start" alt="@booking.ListingTitle" style="object-fit: cover; height: 100%;">
+                                        </a>
+                                    </div>
+                                    <div class="col-md-8">
+                                        <div class="card-body">
+                                            <h5 class="card-title">İlan: <a href="@Url.Action("AdDetail", "Home", new { id = booking.ListingId })" target="_blank" class="text-decoration-none">@booking.ListingTitle</a></h5>
+                                            <p class="card-text"><small class="text-muted"><i class="bi bi-geo-alt-fill"></i> @booking.ListingLocation</small></p>
+                                            <hr>
+                                            <p class="card-text mb-1"><strong>Misafir:</strong> @booking.GuestName (@booking.GuestEmail)</p>
+                                            <p class="card-text mb-1"><strong>Giriş:</strong> @booking.CheckInDate.ToString("dd MMMM yyyy")</p>
+                                            <p class="card-text mb-1"><strong>Çıkış:</strong> @booking.CheckOutDate.ToString("dd MMMM yyyy")</p>
+                                            <p class="card-text mb-2"><strong>Toplam Tutar:</strong> @booking.TotalPrice.ToString("C")</p>
+                                            
+                                            <div class="d-flex justify-content-end mt-auto">
+                                                <form method="post" asp-action="RejectBooking" asp-controller="Host" class="me-2">
+                                                    @Html.AntiForgeryToken()
+                                                    <input type="hidden" name="bookingId" value="@booking.BookingId" />
+                                                    <button type="submit" class="btn btn-danger btn-sm">Reddet</button>
+                                                </form>
+                                                <form method="post" asp-action="ConfirmBooking" asp-controller="Host">
+                                                    @Html.AntiForgeryToken()
+                                                    <input type="hidden" name="bookingId" value="@booking.BookingId" />
+                                                    <button type="submit" class="btn btn-success btn-sm">Onayla</button>
+                                                </form>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    }
+                </div>
+            }
+        </div>
+    </div>
+</div>
+
+@section Styles {
+    <style>
+        .pending-reservation-card .card-body {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .pending-reservation-card img {
+            border-top-left-radius: var(--bs-card-border-radius);
+            border-bottom-left-radius: var(--bs-card-border-radius);
+        }
+
+      .pending-reservation-card img {
+                border-bottom-left-radius: 0;
+                border-top-right-radius: var(--bs-card-border-radius);
+      
+        }
+    </style>
+}

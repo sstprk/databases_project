@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>@ViewData["Title"] - Cabinly</title>
+    <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
+    <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
+    <link rel="stylesheet" href="~/css/style.css" asp-append-version="true" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css" />
+    @RenderSection("Styles", required: false)
+</head>
+<body>
+    <header>
+        <nav class="navbar navbar-expand-lg navbar-custom">
+    <div class="container-fluid">
+      <a class="navbar-brand" asp-controller="@(User.IsInRole("host") ? "Host" : "Home")" asp-action="@(User.IsInRole("host") ? "HostPage" : "Index")">Cabinly</a>
+  
+      <div class="d-flex d-lg-none order-lg-last">
+        <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarModern" aria-controls="navbarModern" aria-expanded="false" aria-label="Menüyü Aç/Kapa">
+            <span class="navbar-toggler-icon"></span>
+        </button>
+      </div>
+  
+      <div class="collapse navbar-collapse" id="navbarModern">
+        <ul class="navbar-nav me-auto mb-2 mb-lg-0">
+          <li class="nav-item">
+            <a class="nav-link active" asp-controller="@(User.IsInRole("host") ? "Host" : "Home")" asp-action="@(User.IsInRole("host") ? "HostPage" : "Index")">Ana Sayfa</a>
+          </li>
+          
+          <li class="nav-item">
+            <a class="nav-link" asp-controller="@(User.IsInRole("host") ? "Host" : "Home")" asp-action="@(User.IsInRole("host") ? "HostAboutPage" : "About")">Hakkımızda</a>
+          </li>
+          <li class="nav-item">
+            <a class="nav-link" asp-controller="@(User.IsInRole("host") ? "Host" : "Home")" asp-action="@(User.IsInRole("host") ? "HostContactPage" : "Contact")">İletişim</a>
+          </li>
+        </ul>
+        <div class="d-none d-lg-flex">
+        </div>
+      </div>
+    </div>
+  </nav>
+  
+    </header>
+
+    <main role="main" class="flex-shrink-0">
+        <div class="container mt-5">
+            @RenderBody()
+        </div>
+    </main>
+
+    <footer class="footer-custom text-white mt-5" >
+    <div class="container py-4">
+      <div class="row">
+        <div class="col-md-4 mb-3">
+          <h5 class="fw-bold">Cabinly</h5>
+          <p>Hayalinizdeki tatili bizimle yaşayın. Konfor, doğa ve huzur bir arada.</p>
+        </div>
+        <div class="col-md-4 mb-3">
+          <h6 class="fw-bold">Hızlı Erişim</h6>
+          <ul class="list-unstyled">
+            <li><a asp-controller="@(User.IsInRole("host") ? "Host" : "Home")" asp-action="@(User.IsInRole("host") ? "HostPage" : "Index")" class="footer-link">Ana Sayfa</a></li>
+            <li><a asp-controller="@(User.IsInRole("host") ? "Host" : "Home")" asp-action="@(User.IsInRole("host") ? "HostAboutPage" : "About")" class="footer-link">Hakkımızda</a></li>
+            <li><a asp-controller="@(User.IsInRole("host") ? "Host" : "Home")" asp-action="@(User.IsInRole("host") ? "HostContactPage" : "Contact")" class="footer-link">İletişim</a></li>
+          </ul>
+        </div>
+        <div class="col-md-4 mb-3">
+          <h6 class="fw-bold">İletişim</h6>
+          <p><i class="bi bi-telephone-fill"></i> +90 212 123 45 67</p>
+          <p><i class="bi bi-envelope-fill"></i> info@Cabinly.com</p>
+          <p><i class="bi bi-geo-alt-fill"></i> Manisa, Türkiye</p>
+        </div>
+      </div>
+    </div>
+    <div class="text-center py-2" style="background-color: rgba(0, 0, 0, 0.2);">
+      © 2025 Cabinly - Tüm Hakları Saklıdır.
+    </div>
+  </footer>
+
+    <script src="~/lib/jquery/dist/jquery.min.js"></script>
+    <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="~/js/site.js" asp-append-version="true"></script>
+    @await RenderSectionAsync("Scripts", required: false)
+</body>
+</html>

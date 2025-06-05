@@ -1,0 +1,38 @@
+@model realCabinly.Models.RegisterViewModel
+@{
+    ViewData["Title"] = "Kayıt Ol";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+<div class="login-container">
+    <h2>Kayıt Ol</h2>
+    <form asp-controller="Account" asp-action="Register" method="post">
+        <div asp-validation-summary="All" class="text-danger"></div>
+        
+        <input type="text" name="name" class="form-control" placeholder="Adınız" required>
+        <input type="email" name="email" class="form-control" placeholder="E-Posta adresiniz" required>
+        <input type="password" name="password" class="form-control" placeholder="Şifreniz" required>
+        <input type="password" name="confirmPassword" class="form-control" placeholder="Şifrenizi tekrar giriniz" required>
+        
+        <div class="form-group">
+            <label class="d-block mb-2">Hesap Türü</label>
+            <div class="form-check form-check-inline">
+                <input class="form-check-input" type="radio" name="role" id="guest" value="guest" checked>
+                <label class="form-check-label" for="guest">Kiracı</label>
+            </div>
+            <div class="form-check form-check-inline">
+                <input class="form-check-input" type="radio" name="role" id="host" value="host">
+                <label class="form-check-label" for="host">Host</label>
+            </div>
+        </div>
+
+        <button type="submit" class="btn-login">Kayıt Ol</button>
+    </form>
+    <div class="form-text">
+        <a asp-controller="Account" asp-action="Login">Zaten hesabınız var mı? Giriş yap</a>
+    </div>
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}
