@@ -1,0 +1,22 @@
+﻿@{
+    ViewData["Title"] = "Giriş Yap";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+<div class="login-container">
+    <h2>Giriş Yap</h2>
+    <form method="post" asp-action="Login" asp-controller="Account">
+        <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+        <input type="email" name="email" class="form-control" placeholder="E-Posta adresiniz" required>
+        <input type="password" name="password" class="form-control" placeholder="Şifreniz" required>
+        <button type="submit" class="btn-login">Giriş Yap</button>
+    </form>
+    <div class="form-text">
+        <a asp-controller="Account" asp-action="ForgotPassword">Şifremi unuttum?</a><br>
+        <a asp-controller="Account" asp-action="Register">Bir hesabınız yok mu? Kayıt ol</a>
+    </div>
+</div>
+
+@section Scripts {
+    @{await Html.RenderPartialAsync("_ValidationScriptsPartial");}
+}

@@ -1,0 +1,110 @@
+﻿<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>@ViewData["Title"] - Cabinly</title>
+    <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
+    <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
+    <link rel="stylesheet" href="~/css/style.css" asp-append-version="true" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css" />
+    @RenderSection("Styles", required: false)
+</head>
+<body>
+    <header>
+        <nav class="navbar navbar-expand-lg navbar-custom">
+    <div class="container-fluid">
+      <a class="navbar-brand" asp-area="" asp-controller="Home" asp-action="Index">Cabinly</a>
+  
+      <div class="d-flex d-lg-none order-lg-last">
+        @if (User.Identity.IsAuthenticated)
+        {
+            <a class="login-btn me-2" asp-area="" asp-controller="Account" asp-action="Settings">Ayarlar</a>
+            <a class="login-btn" asp-area="" asp-controller="Account" asp-action="Logout">Çıkış Yap</a>
+        }
+        else
+        {
+            <a class="login-btn" asp-area="" asp-controller="Account" asp-action="Login">Giriş Yap</a>
+        }
+        <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarModern" aria-controls="navbarModern" aria-expanded="false" aria-label="Menüyü Aç/Kapa">
+            <span class="navbar-toggler-icon"></span>
+        </button>
+      </div>
+  
+      <div class="collapse navbar-collapse" id="navbarModern">
+        <ul class="navbar-nav me-auto mb-2 mb-lg-0">
+          <li class="nav-item">
+            <a class="nav-link active" asp-area="" asp-controller="Home" asp-action="Index">Ana Sayfa</a>
+          </li>
+          <li class="nav-item">
+            <a class="nav-link" asp-area="" asp-controller="Home" asp-action="Ads">İlanlar</a>
+          </li>
+          @if (User.Identity.IsAuthenticated)
+          {
+            <li class="nav-item">
+              <a class="nav-link" asp-area="" asp-controller="Home" asp-action="MyBookings">Rezervasyonlarım</a>
+            </li>
+          }
+          <li class="nav-item">
+            <a class="nav-link" asp-area="" asp-controller="Home" asp-action="About">Hakkımızda</a>
+          </li>
+          <li class="nav-item">
+            <a class="nav-link" asp-area="" asp-controller="Home" asp-action="Contact">İletişim</a>
+          </li>
+        </ul>
+        <div class="d-none d-lg-flex">
+          @if (User.Identity.IsAuthenticated)
+          {
+              <a class="btn login-btn me-2" asp-area="" asp-controller="Account" asp-action="Settings">Ayarlar</a>
+              <a class="btn login-btn" asp-area="" asp-controller="Account" asp-action="Logout">Çıkış Yap</a>
+          }
+          else
+          {
+              <a class="btn login-btn" asp-area="" asp-controller="Account" asp-action="Login">Giriş Yap</a>
+          }
+        </div>
+      </div>
+    </div>
+  </nav>
+    </header>
+
+    <main role="main" class="flex-shrink-0">
+        <div class="container">
+            @RenderBody()
+        </div>
+    </main>
+
+    <footer class="footer-custom mt-5">
+        <div class="container py-4">
+            <div class="row">
+                <div class="col-md-4 mb-3">
+                    <h5 class="fw-bold">Cabinly</h5>
+                    <p>Hayalinizdeki tatili bizimle yaşayın. Konfor, doğa ve huzur bir arada.</p>
+                </div>
+                <div class="col-md-4 mb-3">
+                    <h6 class="fw-bold">Hızlı Erişim</h6>
+                    <ul class="list-unstyled">
+                        <li><a class="footer-link" asp-controller="Home" asp-action="Index">Ana Sayfa</a></li>
+                        <li><a class="footer-link" asp-controller="Home" asp-action="About">Hakkımızda</a></li>
+                        <li><a class="footer-link" asp-controller="Home" asp-action="Contact">İletişim</a></li>
+                    </ul>
+                </div>
+                <div class="col-md-4 mb-3">
+                    <h6 class="fw-bold">İletişim</h6>
+                    <p><i class="bi bi-telephone-fill"></i> +90 212 123 45 67</p>
+                    <p><i class="bi bi-envelope-fill"></i> info@Cabinly.com</p>
+                    <p><i class="bi bi-geo-alt-fill"></i> Manisa, Türkiye</p>
+                </div>
+            </div>
+        </div>
+        <div class="text-center py-2" style="background-color: rgba(0, 0, 0, 0.08);">
+            © 2025 Cabinly - Tüm Hakları Saklıdır.
+        </div>
+    </footer>
+
+    <script src="~/lib/jquery/dist/jquery.min.js"></script>
+    <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="~/js/site.js" asp-append-version="true"></script>
+    @await RenderSectionAsync("Scripts", required: false)
+</body>
+</html>

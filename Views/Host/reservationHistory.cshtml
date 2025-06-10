@@ -1,0 +1,118 @@
+@model List<realCabinly.Controllers.PendingReservationViewModel> 
+@{
+    Layout = "~/Views/Shared/_Layout2.cshtml";
+    ViewData["Title"] = "Geçmiş Rezervasyonlarım"; 
+}
+
+<div class="custom-container">
+    <div class="row">
+        <!-- Sol Menü -->
+        <div class="col-md-3 sidebarS">
+            <button class="btn-login" onclick="window.location.href='@Url.Action("myAds", "Host")'">İlanlarım</button>
+            <button class="btn-login" onclick="window.location.href='@Url.Action("pendingReservations", "Host")'">Onay Bekleyen Rezervasyonlar</button>
+            <button class="btn-login" onclick="window.location.href='@Url.Action("activeReservations", "Host")'">Aktif Rezervasyonlarım</button>
+            <button class="btn-login active" onclick="window.location.href='@Url.Action("reservationHistory", "Host")'">Geçmiş Rezervasyonlarım</button>
+            <button class="btn-login" onclick="window.location.href='@Url.Action("newAd", "Host")'">Yeni İlan Ver</button>
+            <button class="btn-login" onclick="window.location.href='@Url.Action("settings", "Host")'">Ayarlar</button>
+            <button class="btn-login" id="btn-quit" onclick="window.location.href='@Url.Action("Logout", "Account")'">Çıkış Yap</button>
+        </div>
+
+        <!-- Sağ İçerik Alanı -->
+        <div class="col-md-9 content-areaS" id="icerik">
+            <h2 class="mb-4">@ViewData["Title"]</h2>
+
+            @if (TempData["SuccessMessage"] != null)
+            {
+                <div class="alert alert-success" role="alert">
+                    @TempData["SuccessMessage"]
+                </div>
+            }
+            @if (TempData["ErrorMessage"] != null)
+            {
+                <div class="alert alert-danger" role="alert">
+                    @TempData["ErrorMessage"]
+                </div>
+            }
+            @if (ViewBag.ErrorMessage != null)
+            {
+                <div class="alert alert-danger" role="alert">
+                    @ViewBag.ErrorMessage
+                </div>
+            }
+
+            @if (Model != null && Model.Any())
+            {
+                foreach (var reservation in Model)
+                {
+                    <div class="card shadow-sm mb-4 reservation-card status-@reservation.BookingStatus?.ToLower()">
+                        <div class="row g-0">
+                            <div class="col-md-4">
+                                <img src="@(string.IsNullOrEmpty(reservation.ListingCoverImageUrl) ? "/images/default-ad-image.png" : Url.Content(reservation.ListingCoverImageUrl))" class="img-fluid rounded-start" alt="İlan Resmi" style="object-fit: cover; height: 100%; width: 100%;">
+                            </div>
+                            <div class="col-md-8">
+                                <div class="card-body">
+                                    <div class="d-flex justify-content-between align-items-start">
+                                        <h5 class="card-title mb-1">@reservation.ListingTitle</h5>
+                                        <span class="badge 
+                                            @if(reservation.BookingStatus == "cancelled") { <text>bg-danger</text> } 
+                                            else if (reservation.BookingStatus == "confirmed" && reservation.CheckOutDate < DateTime.Now) { <text>bg-secondary</text> } 
+                                            else { <text>bg-info</text> } 
+                                            fs-6">
+                                            @if(reservation.BookingStatus == "cancelled") { <text>İptal Edildi</text> }
+                                            else if (reservation.BookingStatus == "confirmed" && reservation.CheckOutDate < DateTime.Now) { <text>Tamamlandı</text> }
+                                            else { @reservation.BookingStatus } 
+                                        </span>
+                                    </div>
+                                    <p class="card-text mb-1"><small class="text-muted">@reservation.ListingLocation</small></p>
+                                    
+                                    <hr class="my-2">
+
+                                    <p class="card-text mb-1">
+                                        <strong>Misafir:</strong> @reservation.GuestName <br>
+                                        <small class="text-muted">@reservation.GuestEmail</small>
+                                    </p>
+                                    <p class="card-text mb-1">
+                                        <strong>Giriş:</strong> @reservation.CheckInDate.ToString("dd MMM yyyy")
+                                    </p>
+                                    <p class="card-text mb-2">
+                                        <strong>Çıkış:</strong> @reservation.CheckOutDate.ToString("dd MMM yyyy")
+                                    </p>
+                                    <p class="card-text fw-bold">
+                                        Toplam Fiyat: @reservation.TotalPrice.ToString("C")
+                                    </p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                }
+            }
+            else
+            {
+                <div class="alert alert-info" role="alert">
+                    Görüntülenecek geçmiş bir rezervasyonunuz bulunmamaktadır.
+                </div>
+            }
+        </div>
+    </div>
+</div>
+
+<style>
+    .sidebarS button.active {
+        background-color: #007bff;
+        color: white;
+    }
+    .card-title {
+        font-size: 1.1rem;
+    }
+    .reservation-card.status-cancelled {
+        opacity: 0.7;
+        border-left: 5px solid #dc3545; /* Red for cancelled */
+    }
+    .reservation-card.status-confirmed {
+        /* Style for completed-confirmed, if needed */
+        /* Example: border-left: 5px solid #6c757d; */ /* Grey for completed */
+    }
+    .reservation-card.status-confirmed .badge.bg-secondary {
+        /*  Ensures completed reservations also get a distinct look if needed */
+    }
+</style>

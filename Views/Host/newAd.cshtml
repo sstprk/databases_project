@@ -1,0 +1,70 @@
+@{
+    Layout = "~/Views/Shared/_Layout2.cshtml";
+    ViewData["Title"] = "Host Page";
+}
+
+
+
+<div class="custom-container">
+    <div class="row">
+      <!-- Sol Menü -->
+      <div class="col-md-3 sidebarS">
+        <button class="btn-login" onclick="window.location.href='@Url.Action("myAds", "Host")'">İlanlarım</button>
+        <button class="btn-login" onclick="window.location.href='@Url.Action("pendingReservations", "Host")'">Onay Bekleyen Rezervasyonlar</button>
+        <button class="btn-login" onclick="window.location.href='@Url.Action("activeReservations", "Host")'">Aktif Rezervasyonlarım</button>
+        <button class="btn-login" onclick="window.location.href='@Url.Action("reservationHistory", "Host")'">Geçmiş Rezervasyonlarım</button>
+        <button class="btn-login" onclick="window.location.href='@Url.Action("newAd", "Host")'">Yeni İlan Ver</button>
+        <button class="btn-login" onclick="window.location.href='@Url.Action("settings", "Host")'">Ayarlar</button>
+        <button class="btn-login" id="btn-quit" onclick="window.location.href='@Url.Action("Logout", "Account")'">Çıkış Yap</button>
+
+
+      </div>
+
+
+      <!-- Sağ İçerik Alanı -->
+      <div class="col-md-9 content-areaS" id="icerik">
+       
+<div class="container py-4">
+    <h3 class="mb-4">Yeni İlan Ver</h3>
+
+    <form asp-controller="Host" asp-action="CreateAd" method="post" enctype="multipart/form-data">
+        <!-- İlan Başlığı -->
+        <div class="mb-3">
+            <label for="ilanBaslik" class="form-label">İlan Başlığı</label>
+            <input name="adTitle" type="text" class="form-control" id="ilanBaslik" placeholder="Örn: Deniz manzaralı yazlık"
+                required />
+        </div>
+
+        <!-- Açıklama -->
+        <div class="mb-3">
+            <label for="ilanAciklama" class="form-label">Açıklama</label>
+            <textarea name="adDescription" class="form-control" id="ilanAciklama" rows="4" placeholder="İlan hakkında detaylı bilgi verin..."
+                required></textarea>
+        </div>
+
+        <!-- Konum -->
+        <div class="mb-3">
+            <label for="ilanKonum" class="form-label">Konum</label>
+            <input name="location" type="text" class="form-control" id="ilanKonum" placeholder="Örn: Fethiye, Ölüdeniz"
+                required />
+        </div>
+
+        <!-- Günlük Ücret -->
+        <div class="mb-3">
+            <label for="gunlukUcret" class="form-label">Günlük Ücret (₺)</label>
+            <input name="adDailyPrice" type="number" class="form-control" id="gunlukUcret" placeholder="Örn: 750" required />
+        </div>
+
+        <!-- Resim Yükleme -->
+        <div class="mb-4">
+            <label for="ilanResim" class="form-label">İlan Görseli</label>
+            <input name="adImg" class="form-control" type="file" id="ilanResim" accept="image/*" required />
+        </div>
+
+        <!-- Gönder Butonu -->
+        <button type="submit" class="login-btn">İlanı Yayınla</button>
+    </form>
+</div>
+      </div>
+    </div>
+  </div>

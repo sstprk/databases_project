@@ -1,0 +1,107 @@
+@model List<realCabinly.Controllers.PendingReservationViewModel>
+@{
+    Layout = "~/Views/Shared/_Layout2.cshtml";
+    ViewData["Title"] = "Aktif Rezervasyonlarım";
+}
+
+<div class="custom-container">
+    <div class="row">
+        <!-- Sol Menü -->
+        <div class="col-md-3 sidebarS">
+            <button class="btn-login" onclick="window.location.href='@Url.Action("myAds", "Host")'">İlanlarım</button>
+            <button class="btn-login" onclick="window.location.href='@Url.Action("pendingReservations", "Host")'">Onay Bekleyen Rezervasyonlar</button>
+            <button class="btn-login active" onclick="window.location.href='@Url.Action("activeReservations", "Host")'">Aktif Rezervasyonlarım</button>
+            <button class="btn-login" onclick="window.location.href='@Url.Action("reservationHistory", "Host")'">Geçmiş Rezervasyonlarım</button>
+            <button class="btn-login" onclick="window.location.href='@Url.Action("newAd", "Host")'">Yeni İlan Ver</button>
+            <button class="btn-login" onclick="window.location.href='@Url.Action("settings", "Host")'">Ayarlar</button>
+            <button class="btn-login" id="btn-quit" onclick="window.location.href='@Url.Action("Logout", "Account")'">Çıkış Yap</button>
+        </div>
+
+        <!-- Sağ İçerik Alanı -->
+        <div class="col-md-9 content-areaS" id="icerik">
+            <h2 class="mb-4">Aktif Rezervasyonlarım</h2>
+
+            @if (TempData["SuccessMessage"] != null)
+            {
+                <div class="alert alert-success" role="alert">
+                    @TempData["SuccessMessage"]
+                </div>
+            }
+            @if (TempData["ErrorMessage"] != null)
+            {
+                <div class="alert alert-danger" role="alert">
+                    @TempData["ErrorMessage"]
+                </div>
+            }
+            @if (ViewBag.ErrorMessage != null)
+            {
+                <div class="alert alert-danger" role="alert">
+                    @ViewBag.ErrorMessage
+                </div>
+            }
+
+            @if (Model != null && Model.Any())
+            {
+                foreach (var reservation in Model)
+                {
+                    <div class="card shadow-sm mb-4">
+                        <div class="row g-0">
+                            <div class="col-md-4">
+                                <img src="@(string.IsNullOrEmpty(reservation.ListingCoverImageUrl) ? "/images/default-ad-image.png" : Url.Content(reservation.ListingCoverImageUrl))" class="img-fluid rounded-start" alt="İlan Resmi" style="object-fit: cover; height: 100%; width: 100%;">
+                            </div>
+                            <div class="col-md-8">
+                                <div class="card-body">
+                                    <div class="d-flex justify-content-between align-items-start">
+                                        <h5 class="card-title mb-1">@reservation.ListingTitle</h5>
+                                        <span class="badge bg-success">@reservation.TotalPrice.ToString("C")</span>
+                                    </div>
+                                    <p class="card-text mb-1"><small class="text-muted">@reservation.ListingLocation</small></p>
+                                    
+                                    <hr class="my-2">
+
+                                    <p class="card-text mb-1">
+                                        <strong>Misafir:</strong> @reservation.GuestName <br>
+                                        <small class="text-muted">@reservation.GuestEmail</small>
+                                    </p>
+                                    <p class="card-text mb-1">
+                                        <strong>Giriş:</strong> @reservation.CheckInDate.ToString("dd MMM yyyy")
+                                    </p>
+                                    <p class="card-text mb-2">
+                                        <strong>Çıkış:</strong> @reservation.CheckOutDate.ToString("dd MMM yyyy")
+                                    </p>
+                                    
+                                    <div class="mt-auto d-flex justify-content-end">
+                                        <form asp-action="CancelBookingByHost" asp-controller="Host" method="post" onsubmit="return confirm('Bu rezervasyonu iptal etmek istediğinizden emin misiniz?');">
+                                            <input type="hidden" name="bookingId" value="@reservation.BookingId" />
+                                            @Html.AntiForgeryToken()
+                                            <button type="submit" class="btn btn-outline-danger btn-sm">Rezervasyonu İptal Et</button>
+                                        </form>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                }
+            }
+            else
+            {
+                <div class="alert alert-info" role="alert">
+                    Şu anda onaylanmış (aktif) bir rezervasyonunuz bulunmamaktadır.
+                </div>
+            }
+        </div>
+    </div>
+</div>
+
+<style>
+    .sidebarS button.active {
+        background-color: #007bff; /* Veya istediğiniz aktif renk */
+        color: white;
+    }
+    .card-title {
+        font-size: 1.1rem;
+    }
+    .card-text strong {
+        color: #333;
+    }
+</style>

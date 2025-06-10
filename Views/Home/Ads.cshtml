@@ -1,0 +1,150 @@
+@model List<realCabinly.Models.IlanView>
+
+@{
+    ViewData["Title"] = "İlanlar";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+<div id="navbar-placeholder"></div>
+@*<script src="navbarLoader.js"></script>*@ @* Bu satır JS hatasına neden oluyorsa veya gerekmiyorsa kaldırılabilir/yorum satırı yapılabilir *@
+
+<div class="search-container">
+    <h2>Filtrele veya Tekrar Ara</h2>
+    @using (Html.BeginForm("Ads", "Home", FormMethod.Get, new { @class = "search-form" }))
+    {
+        <div class="top-row">
+            @Html.TextBox("query", (string)ViewBag.Query, new { placeholder = "İstediğiniz şehri veya bölgeyi aratınız" })
+
+            <select name="guestCount" class="form-control">
+                <option value="">Kişi Sayısı</option>
+                @for (int i = 1; i <= 5; i++)
+                {
+                    string text = (i == 5) ? "5+ Kişi" : $"{i} Kişi";
+                    bool isSelected = ViewBag.GuestCount != null && ViewBag.GuestCount == i;
+                    <option value="@i" selected="@(isSelected ? "selected" : null)">@text</option>
+                }
+            </select>
+
+            <div class="dates-container">
+                <input type="date" name="checkInDate" value="@(ViewBag.CheckInDate?.ToString("yyyy-MM-dd"))" class="form-control" />
+                <input type="date" name="checkOutDate" value="@(ViewBag.CheckOutDate?.ToString("yyyy-MM-dd"))" class="form-control" />
+            </div>
+        </div>
+        <div class="button-container">
+            <button type="submit" class="search-btn">Arama Yap</button>
+        </div>
+    }
+</div>
+
+<div class="custom-container mt-4" style="margin: 0 10px;">
+    <div class="row">
+        <!-- Filtre Bölümü -->
+        <div class="col-md-3 filter-section">
+            <h4>Filtrele</h4>
+            <form onsubmit="return false;">
+                <div class="form-group mb-3">
+                    <label class="form-label">
+                        Fiyat Aralığı:
+                        <span id="priceRangeValue">500₺ - 5000₺</span>
+                    </label>
+                    <input type="range" class="form-range" id="priceMin" min="0" max="5000" step="50" value="500" />
+                    <input type="range" class="form-range mt-1" id="priceMax" min="500" max="5000" step="50" value="5000" />
+                </div>
+                <div class="form-group mb-3">
+                    <label for="dateRangeStart" class="form-label">Giriş Tarihi</label>
+                    <input type="date" class="form-control" id="dateRangeStart" />
+                </div>
+                <div class="form-group mb-3">
+                    <label for="dateRangeEnd" class="form-label">Çıkış Tarihi</label>
+                    <input type="date" class="form-control" id="dateRangeEnd" />
+                </div>
+                <div class="d-grid">
+                    <button type="submit" class="login-btn">Filtrele</button>
+                </div>
+            </form>
+        </div>
+
+        <!-- İlanlar Bölümü -->
+        <div class="col-md-9">
+           
+            <div class="row" id="adsContainer">
+                @if (Model != null && Model.Any())
+                {
+                    foreach (var ilan in Model)
+                    {
+                        <!-- DEBUG: Ads.cshtml - İşlenen İlan ID: @ilan.Id, Başlık: @ilan.Title -->
+                        <div class="col-md-4 mb-4" data-price="@Convert.ToInt32(ilan.PricePerNight)" data-debug-id="@ilan.Id">
+                            <div class="card custom-card shadow-sm h-100 position-relative">
+                                <img src="@ilan.ImageUrl" class="card-img-top" alt="@ilan.Title" style="height: 200px; object-fit: cover;" />
+                                <div class="card-body d-flex flex-column">
+                                    <h5 class="card-title mb-1">@ilan.Title</h5>
+                                    <p class="card-text text-muted small mb-2">@ilan.Location</p>
+                                    @*<p class="card-text small">@ilan.Description.Substring(0, Math.Min(ilan.Description.Length, 70))... </p>*@
+                                    <div class="mt-auto d-flex justify-content-between align-items-center">
+                                        <div>
+                                            <span class="fw-bold fs-5 text-primary">₺@ilan.PricePerNight.ToString("N0")</span> <span class="text-muted small">/ gece</span>
+                                        </div>
+                                        <a asp-controller="Home" asp-action="AdDetail" asp-route-id="@ilan.Id" class="btn btn-sm btn-outline-primary">Detaylar</a>
+                                    </div>
+                                </div>
+                                <div class="card-img-overlay-price d-none">₺@ilan.PricePerNight.ToString("N0") / gece</div> @* Eski fiyat gösterimi gizlendi, yenisi card-body içinde *@ 
+                            </div>
+                        </div>
+                    }
+                }
+                else
+                {
+                    <div class="col-12">
+                        <p class="text-center text-muted mt-5">Gösterilecek uygun ilan bulunamadı.</p>
+                    </div>
+                }
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            const minInput = document.getElementById("priceMin");
+            const maxInput = document.getElementById("priceMax");
+            const valueLabel = document.getElementById("priceRangeValue");
+            const adsContainer = document.getElementById("adsContainer");
+
+            function updateLabelAndFilter() {
+                let min = parseInt(minInput.value);
+                let max = parseInt(maxInput.value);
+                
+                if (min > max) {
+                    min = max;
+                    minInput.value = min;
+                }
+                valueLabel.innerText = `${min}₺ - ${max}₺`;
+
+                let visibleAdsCount = 0;
+                document.querySelectorAll("#adsContainer > div[data-price]").forEach((col) => {
+                    const price = parseInt(col.getAttribute("data-price"));
+                    if (price >= min && price <= max) {
+                        col.classList.remove("d-none");
+                        visibleAdsCount++;
+                    } else {
+                        col.classList.add("d-none");
+                    }
+                });
+
+                // İlan yok mesajının görünürlüğünü ayarla
+                const noAdsMessage = adsContainer.querySelector(".col-12 .alert-info");
+                if (noAdsMessage) {
+                    if (visibleAdsCount === 0) {
+                        noAdsMessage.classList.remove("d-none");
+                    } else {
+                        noAdsMessage.classList.add("d-none");
+                    }
+                }
+            }
+
+            minInput.addEventListener("input", updateLabelAndFilter);
+            maxInput.addEventListener("input", updateLabelAndFilter);
+        });
+    </script>
+}
