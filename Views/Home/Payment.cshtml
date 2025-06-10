@@ -4,61 +4,88 @@
     Layout = "~/Views/Shared/_Layout.cshtml";
 }
 
-<div class="container mt-5">
+
+<div class="container my-5">
     <div class="row justify-content-center">
-        <div class="col-md-8 col-lg-6">
-            <div class="card shadow">
-                <div class="card-header bg-primary text-white">
-                    <h4 class="mb-0">Ödeme Detayları</h4>
+        <div class="col-lg-10 col-xl-9">
+            <div class="card payment-card">
+                <div class="payment-card-header text-center">
+                    <h3 class="mb-0">@ViewData["Title"]</h3>
                 </div>
-                <div class="card-body">
-                    <h5 class="card-title">@Model.ListingTitle</h5>
-                    <p class="card-text"><i class="fas fa-map-marker-alt"></i> @Model.Location</p>
-                    <hr>
-                    <div class="row">
-                        <div class="col-6">
-                            <strong>Giriş Tarihi:</strong>
-                            <p>@Model.CheckInDate.ToString("dd MMMM yyyy")</p>
+                <div class="card-body p-0">
+                    <div class="row g-0">
+                        <div class="col-md-6 booking-summary">
+                            <h5>Rezervasyon Özeti</h5>
+
+                            <div class="summary-item">
+                                <strong>Tesis</strong>
+                                <p>@Model.ListingTitle</p>
+                            </div>
+                             <div class="summary-item">
+                                <strong>Konum</strong>
+                                <p><i class="fas fa-map-marker-alt me-2 text-secondary"></i>@Model.Location</p>
+                            </div>
+
+                            <hr class="my-3">
+
+                            <div class="row">
+                                <div class="col-6 summary-item">
+                                    <strong>Giriş Tarihi</strong>
+                                    <p><i class="fas fa-calendar-alt me-2 text-secondary"></i>@Model.CheckInDate.ToString("dd MMM yyyy")</p>
+                                </div>
+                                <div class="col-6 summary-item">
+                                    <strong>Çıkış Tarihi</strong>
+                                    <p><i class="fas fa-calendar-alt me-2 text-secondary"></i>@Model.CheckOutDate.ToString("dd MMM yyyy")</p>
+                                </div>
+                            </div>
+                            
+                            <div class="total-price-box">
+                                <span>TOPLAM TUTAR</span>
+                                <div class="price">@Model.TotalPrice.ToString("C")</div>
+                            </div>
                         </div>
-                        <div class="col-6">
-                            <strong>Çıkış Tarihi:</strong>
-                            <p>@Model.CheckOutDate.ToString("dd MMMM yyyy")</p>
+                        <div class="col-md-6 payment-form">
+                             <h5><i class="fas fa-lock me-2"></i>Güvenli Ödeme</h5>
+                             <form asp-action="ProcessPayment" asp-controller="Home" method="post">
+                                <input type="hidden" asp-for="BookingId" />
+                                <div class="mb-3">
+                                    <label for="cardHolder" class="form-label">Kart Sahibi</label>
+                                    <div class="input-group">
+                                        <span class="input-group-text"><i class="fas fa-user"></i></span>
+                                        <input type="text" id="cardHolder" class="form-control" placeholder="Ad Soyad" required>
+                                    </div>
+                                </div>
+                                <div class="mb-3">
+                                    <label for="cardNumber" class="form-label">Kart Numarası</label>
+                                    <div class="input-group">
+                                         <span class="input-group-text"><i class="fas fa-credit-card"></i></span>
+                                        <input type="text" id="cardNumber" class="form-control" placeholder="0000 0000 0000 0000" required>
+                                    </div>
+                                </div>
+                                <div class="row">
+                                    <div class="col-sm-7 mb-3">
+                                        <label for="cardExpiry" class="form-label">Son Kul. Tarihi</label>
+                                        <div class="input-group">
+                                            <span class="input-group-text"><i class="fas fa-calendar"></i></span>
+                                            <input type="text" id="cardExpiry" class="form-control" placeholder="AA/YY" required>
+                                        </div>
+                                    </div>
+                                    <div class="col-sm-5 mb-3">
+                                        <label for="cardCvc" class="form-label">CVC</label>
+                                        <div class="input-group">
+                                             <span class="input-group-text"><i class="fas fa-key"></i></span>
+                                            <input type="text" id="cardCvc" class="form-control" placeholder="123" required>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="d-grid mt-3">
+                                    <button type="submit" class="btn btn-primary btn-lg fw-bold">
+                                        <i class="fas fa-check-circle me-2"></i>Ödemeyi Tamamla
+                                    </button>
+                                </div>
+                            </form>
                         </div>
                     </div>
-                    <div class="alert alert-info">
-                        <strong>Toplam Tutar:</strong>
-                        <strong class="float-end">@Model.TotalPrice.ToString("C")</strong>
-                    </div>
-
-                    <hr>
-
-                    <h5 class="mb-3">Kredi Kartı Bilgileri</h5>
-                    <form asp-action="ProcessPayment" asp-controller="Home" method="post">
-                        <input type="hidden" asp-for="BookingId" />
-                        <div class="mb-3">
-                            <label for="cardNumber" class="form-label">Kart Numarası</label>
-                            <input type="text" id="cardNumber" class="form-control" placeholder="0000 0000 0000 0000" required>
-                        </div>
-                        <div class="row">
-                            <div class="col-md-7 mb-3">
-                                <label for="cardHolder" class="form-label">Kart Sahibi</label>
-                                <input type="text" id="cardHolder" class="form-control" placeholder="Ad Soyad" required>
-                            </div>
-                            <div class="col-md-5 mb-3">
-                                <label for="cardExpiry" class="form-label">Son Kullanma Tarihi</label>
-                                <input type="text" id="cardExpiry" class="form-control" placeholder="AA/YY" required>
-                            </div>
-                        </div>
-                        <div class="row">
-                            <div class="col-md-5">
-                                <label for="cardCvc" class="form-label">CVC</label>
-                                <input type="text" id="cardCvc" class="form-control" placeholder="123" required>
-                            </div>
-                        </div>
-                        <div class="d-grid mt-4">
-                            <button type="submit" class="btn btn-success btn-lg">Ödemeyi Tamamla</button>
-                        </div>
-                    </form>
                 </div>
             </div>
         </div>

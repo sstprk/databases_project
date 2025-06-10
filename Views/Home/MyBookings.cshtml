@@ -5,54 +5,88 @@
     var paymentStatuses = ViewBag.PaymentStatuses as Dictionary<int, string> ?? new Dictionary<int, string>();
 }
 
-<div class="container mt-5">
-    <h2 class="text-center mb-4">@ViewData["Title"]</h2>
 
-    @if (ViewBag.ErrorMessage != null)
-    {
-        <div class="alert alert-danger">@ViewBag.ErrorMessage</div>
-    }
 
-    @if (Model != null && Model.Any())
-    {
-        <table class="table table-striped table-hover">
-            <thead class="table-dark">
-                <tr>
-                    <th>İlan ID</th>
-                    <th>Başlangıç Tarihi</th>
-                    <th>Bitiş Tarihi</th>
-                    <th>Toplam Fiyat</th>
-                    <th>Rezervasyon Durumu</th>
-                    <th>Ödeme Durumu</th>
-                    <th>Eylem</th>
-                </tr>
-            </thead>
-            <tbody>
-                @foreach (var booking in Model)
-                {
-                    var paymentStatus = paymentStatuses.ContainsKey(booking.id) ? paymentStatuses[booking.id] : "N/A";
-                    <tr>
-                        <td>@booking.listing_id</td>
-                        <td>@booking.start_date.ToString("dd MMMM yyyy")</td>
-                        <td>@booking.end_date.ToString("dd MMMM yyyy")</td>
-                        <td>@booking.total_price.ToString("C")</td>
-                        <td>@booking.status</td>
-                        <td>@paymentStatus</td>
-                        <td>
-                            @if (booking.status.ToLower() == "confirmed" && paymentStatus.ToLower() == "pending")
-                            {
-                                <a asp-action="Payment" asp-controller="Home" asp-route-bookingId="@booking.id" class="btn btn-success btn-sm">Ödeme Yap</a>
-                            }
-                        </td>
-                    </tr>
-                }
-            </tbody>
-        </table>
-    }
-    else if (ViewBag.ErrorMessage == null)
-    {
-        <div class="alert alert-info text-center" role="alert">
-            Henüz hiç rezervasyonunuz bulunmamaktadır.
+<div class="container my-5">
+    <div class="row justify-content-center">
+        <div class="col-lg-11 col-xl-10">
+            <div class="card shadow-lg border-0 rounded-lg">
+                <div class="card-header bg-dark text-white py-3">
+                    <h4 class="text-center font-weight-light my-2">@ViewData["Title"]</h4>
+                </div>
+                <div class="card-body p-4">
+
+                    @if (ViewBag.ErrorMessage != null)
+                    {
+                        <div class="alert alert-danger">@ViewBag.ErrorMessage</div>
+                    }
+
+                    @if (Model != null && Model.Any())
+                    {
+                        <div class="table-responsive">  
+                            <table class="table table-hover align-middle mb-0">
+                                <thead class="table-light">
+                                    <tr>
+                                        <th>Başlangıç Tarihi</th>
+                                        <th>Bitiş Tarihi</th>
+                                        <th class="text-end">Toplam Fiyat</th>
+                                        <th class="text-center">Rezervasyon Durumu</th>
+                                        <th class="text-center">Ödeme Durumu</th>
+                                        <th class="text-center">Eylem</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    @foreach (var booking in Model)
+                                    {
+                                        var paymentStatus = paymentStatuses.ContainsKey(booking.id) ? paymentStatuses[booking.id] : "N/A";
+
+                                        var bookingStatusClass = "badge ";
+                                        switch (booking.status.ToLower())
+                                        {
+                                            case "confirmed": bookingStatusClass += "bg-success"; break;
+                                            case "pending": bookingStatusClass += "bg-warning text-dark"; break;
+                                            case "cancelled": bookingStatusClass += "bg-danger"; break;
+                                            default: bookingStatusClass += "bg-secondary"; break;
+                                        }
+
+                                        var paymentStatusClass = "badge ";
+                                        switch (paymentStatus.ToLower())
+                                        {
+                                            case "paid": paymentStatusClass += "bg-success"; break;
+                                            case "pending": paymentStatusClass += "bg-warning text-dark"; break;
+                                            case "failed": paymentStatusClass += "bg-danger"; break;
+                                            case "n/a": paymentStatusClass += "bg-info text-dark"; break;
+                                            default: paymentStatusClass += "bg-secondary"; break;
+                                        }
+
+                                        <tr>
+                                            <td>@booking.start_date.ToString("dd MMM yyyy")</td>
+                                            <td>@booking.end_date.ToString("dd MMM yyyy")</td>
+                                            <td class="text-end fw-bold">@booking.total_price.ToString("C")</td>
+                                            <td class="text-center"><span class="@bookingStatusClass status-badge">@booking.status</span></td>
+                                            <td class="text-center"><span class="@paymentStatusClass status-badge">@paymentStatus</span></td>
+                                            <td class="text-center">
+                                                @if (booking.status.ToLower() == "confirmed" && paymentStatus.ToLower() == "pending")
+                                                {
+                                                    <a asp-action="Payment" asp-controller="Home" asp-route-bookingId="@booking.id" class="btn btn-primary btn-sm">Ödeme Yap</a>
+                                                }
+                                            </td>
+                                        </tr>
+                                    }
+                                </tbody>
+                            </table>
+                        </div>
+                    }
+                    else if (ViewBag.ErrorMessage == null)
+                    {
+                        <div class="text-center py-5">
+                            <h3 class="text-muted">Henüz hiç rezervasyonunuz yok.</h3>
+                            <p class="text-muted">Harika bir kaçamak için şimdi yerinizi ayırtın!</p>
+                            <a asp-action="Index" asp-controller="Home" class="btn btn-primary mt-3">Hemen Keşfet</a>
+                        </div>
+                    }
+                </div>
+            </div>
         </div>
-    }
+    </div>
 </div> 
