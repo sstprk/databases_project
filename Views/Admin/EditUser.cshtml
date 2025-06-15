@@ -1,0 +1,58 @@
+@model realCabinly.Models.User
+@{
+    ViewData["Title"] = "Kullanıcıyı Düzenle";
+}
+
+<div class="container" style="margin-top: 100px;">
+    <div class="row justify-content-center">
+        <div class="col-12 d-flex justify-content-center">
+            <div class="card shadow-lg border-0 rounded-lg" style="width: 500px;">
+                <div class="card-header bg-primary text-white py-3">
+                    <h4 class="text-center font-weight-light my-2">@ViewData["Title"]</h4>
+                </div>
+                <div class="card-body p-4">
+                    <form asp-action="EditUser" method="post">
+                        @Html.AntiForgeryToken()
+                        <input type="hidden" asp-for="Id" />
+                        <div asp-validation-summary="ModelOnly" class="alert alert-danger"></div>
+
+                        <div class="mb-3">
+                            <label asp-for="Name" class="form-label">Ad Soyad</label>
+                            <div class="input-group">
+                                <span class="input-group-text"><i class="fas fa-user"></i></span>
+                                <input asp-for="Name" class="form-control" />
+                            </div>
+                            <span asp-validation-for="Name" class="text-danger"></span>
+                        </div>
+                        <div class="mb-3">
+                            <label asp-for="Email" class="form-label">E-posta</label>
+                            <div class="input-group">
+                                <span class="input-group-text"><i class="fas fa-envelope"></i></span>
+                                <input asp-for="Email" class="form-control" />
+                            </div>
+                            <span asp-validation-for="Email" class="text-danger"></span>
+                        </div>
+                        <div class="mb-3">
+                            <label asp-for="Role" class="form-label d-block">Rol</label>
+                            <div class="btn-group w-100" role="group">
+                                <input type="radio" asp-for="Role" class="btn-check" id="roleGuest" value="guest">
+                                <label class="btn btn-outline-primary" for="roleGuest">Guest</label>
+
+                                <input type="radio" asp-for="Role" class="btn-check" id="roleHost" value="host">
+                                <label class="btn btn-outline-primary" for="roleHost">Host</label>
+
+                                <input type="radio" asp-for="Role" class="btn-check" id="roleAdmin" value="admin">
+                                <label class="btn btn-outline-primary" for="roleAdmin">Admin</label>
+                            </div>
+                            <span asp-validation-for="Role" class="text-danger"></span>
+                        </div>
+                        <div class="mt-4 d-flex justify-content-end">
+                            <a asp-action="Users" class="btn btn-secondary me-2">İptal</a>
+                            <button type="submit" class="btn btn-primary">Değişiklikleri Kaydet</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div> 

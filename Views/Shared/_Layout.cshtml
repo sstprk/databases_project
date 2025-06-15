@@ -1,4 +1,5 @@
-﻿<!DOCTYPE html>
+﻿@using System.Security.Claims
+<!DOCTYPE html>
 <html lang="tr">
 <head>
     <meta charset="utf-8" />
@@ -36,26 +37,38 @@
           <li class="nav-item">
             <a class="nav-link active" asp-area="" asp-controller="Home" asp-action="Index">Ana Sayfa</a>
           </li>
-          <li class="nav-item">
-            <a class="nav-link" asp-area="" asp-controller="Home" asp-action="Ads">İlanlar</a>
-          </li>
-          @if (User.Identity.IsAuthenticated)
+          @if (User.Identity.IsAuthenticated && User.IsInRole("admin"))
           {
             <li class="nav-item">
-              <a class="nav-link" asp-area="" asp-controller="Home" asp-action="MyBookings">Rezervasyonlarım</a>
+                <a class="nav-link" asp-area="" asp-controller="Admin" asp-action="Dashboard">Admin Paneli</a>
             </li>
           }
-          <li class="nav-item">
-            <a class="nav-link" asp-area="" asp-controller="Home" asp-action="About">Hakkımızda</a>
-          </li>
-          <li class="nav-item">
-            <a class="nav-link" asp-area="" asp-controller="Home" asp-action="Contact">İletişim</a>
-          </li>
+          else
+          {
+            <li class="nav-item">
+                <a class="nav-link" asp-area="" asp-controller="Home" asp-action="Ads">İlanlar</a>
+            </li>
+            @if (User.Identity.IsAuthenticated)
+            {
+                <li class="nav-item">
+                <a class="nav-link" asp-area="" asp-controller="Home" asp-action="MyBookings">Rezervasyonlarım</a>
+                </li>
+            }
+            <li class="nav-item">
+                <a class="nav-link" asp-area="" asp-controller="Home" asp-action="About">Hakkımızda</a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link" asp-area="" asp-controller="Home" asp-action="Contact">İletişim</a>
+            </li>
+          }
         </ul>
         <div class="d-none d-lg-flex">
           @if (User.Identity.IsAuthenticated)
           {
-              <a class="btn login-btn me-2" asp-area="" asp-controller="Account" asp-action="Settings">Ayarlar</a>
+              if (!User.IsInRole("admin"))
+              {
+                <a class="btn login-btn me-2" asp-area="" asp-controller="Account" asp-action="Settings">Ayarlar</a>
+              }
               <a class="btn login-btn" asp-area="" asp-controller="Account" asp-action="Logout">Çıkış Yap</a>
           }
           else
@@ -81,6 +94,8 @@
                     <h5 class="fw-bold">Cabinly</h5>
                     <p>Hayalinizdeki tatili bizimle yaşayın. Konfor, doğa ve huzur bir arada.</p>
                 </div>
+                @if (!User.Identity.IsAuthenticated || !User.IsInRole("admin"))
+                {
                 <div class="col-md-4 mb-3">
                     <h6 class="fw-bold">Hızlı Erişim</h6>
                     <ul class="list-unstyled">
@@ -89,6 +104,7 @@
                         <li><a class="footer-link" asp-controller="Home" asp-action="Contact">İletişim</a></li>
                     </ul>
                 </div>
+                }
                 <div class="col-md-4 mb-3">
                     <h6 class="fw-bold">İletişim</h6>
                     <p><i class="bi bi-telephone-fill"></i> +90 212 123 45 67</p>

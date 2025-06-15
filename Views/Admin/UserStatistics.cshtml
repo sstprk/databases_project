@@ -1,0 +1,143 @@
+@model realCabinly.Models.UserStatisticsViewModel
+@{
+    ViewData["Title"] = "Kullanıcı İstatistikleri";
+}
+
+<div class="container" style="margin-top: 30px;">
+    <h1>@ViewData["Title"]</h1>
+    <p>Kullanıcı sayıları ve üyelik trendleri</p>
+
+    <div class="row mb-4">
+        <div class="col-md-3">
+            <div class="card bg-primary text-white">
+                <div class="card-body text-center">
+                    <i class="fas fa-users fa-3x mb-3"></i>
+                    <h3>@Model.TotalUsers</h3>
+                    <p>Toplam Kullanıcı</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card bg-success text-white">
+                <div class="card-body text-center">
+                    <i class="fas fa-user-check fa-3x mb-3"></i>
+                    <h3>@Model.ActiveUsers</h3>
+                    <p>Aktif Kullanıcı</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card bg-info text-white">
+                <div class="card-body text-center">
+                    <i class="fas fa-user-plus fa-3x mb-3"></i>
+                    <h3>@Model.NewUsersThisMonth</h3>
+                    <p>Bu Ay Yeni Üye</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card bg-warning text-white">
+                <div class="card-body text-center">
+                    <i class="fas fa-crown fa-3x mb-3"></i>
+                    <h3>@Model.AdminCount</h3>
+                    <p>Admin Sayısı</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row mb-4">
+        <div class="col-md-6">
+            <div class="card">
+                <div class="card-header text-white">
+                    <h5><i class="fas fa-chart-pie"></i> Kullanıcı Rolleri Dağılımı</h5>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-4 text-center">
+                            <h6>Admin</h6>
+                            <div class="progress mb-3">
+                                <div class="progress-bar bg-warning" role="progressbar" 
+                                     style="width: @(Model.TotalUsers > 0 ? (Model.AdminCount * 100 / Model.TotalUsers) : 0)%">
+                                </div>
+                            </div>
+                            <p class="text-muted">@Model.AdminCount kişi</p>
+                        </div>
+                        <div class="col-md-4 text-center">
+                            <h6>Host</h6>
+                            <div class="progress mb-3">
+                                <div class="progress-bar bg-info" role="progressbar" 
+                                     style="width: @(Model.TotalUsers > 0 ? (Model.HostCount * 100 / Model.TotalUsers) : 0)%">
+                                </div>
+                            </div>
+                            <p class="text-muted">@Model.HostCount kişi</p>
+                        </div>
+                        <div class="col-md-4 text-center">
+                            <h6>Guest</h6>
+                            <div class="progress mb-3">
+                                <div class="progress-bar bg-success" role="progressbar" 
+                                     style="width: @(Model.TotalUsers > 0 ? (Model.GuestCount * 100 / Model.TotalUsers) : 0)%">
+                                </div>
+                            </div>
+                            <p class="text-muted">@Model.GuestCount kişi</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-md-6">
+            <div class="card">
+                <div class="card-header text-white">
+                    <h5><i class="fas fa-chart-line"></i> Kullanıcı Büyümesi</h5>
+                </div>
+                <div class="card-body">
+                    <div class="alert alert-success text-center">
+                        <h4>@Model.NewUsersThisMonth</h4>
+                        <p class="mb-0">Bu ay katılan yeni kullanıcı sayısı</p>
+                    </div>
+                    
+                    @{
+                        var growthRate = Model.TotalUsers > 0 && Model.NewUsersThisMonth > 0 ? 
+                            (Model.NewUsersThisMonth * 100.0 / Model.TotalUsers) : 0;
+                    }
+                    
+                    <div class="text-center">
+                        <p class="text-muted">Büyüme Oranı</p>
+                        <h5 class="text-primary">%@growthRate.ToString("0.1")</h5>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="card">
+        <div class="card-header text-white">
+            <h5><i class="fas fa-info-circle"></i> Özet Bilgiler</h5>
+        </div>
+        <div class="card-body">
+            <div class="row">
+                <div class="col-md-12">
+                    <ul class="list-group list-group-flush">
+                        <li class="list-group-item d-flex justify-content-between">
+                            <span>En çok kullanıcı türü:</span>
+                            <strong>
+                                @{
+                                    var maxRole = "Guest";
+                                    var maxCount = Model.GuestCount;
+                                    if (Model.HostCount > maxCount) { maxRole = "Host"; maxCount = Model.HostCount; }
+                                    if (Model.AdminCount > maxCount) { maxRole = "Admin"; maxCount = Model.AdminCount; }
+                                }
+                                @maxRole (@maxCount kişi)
+                            </strong>
+                        </li>
+                        <li class="list-group-item d-flex justify-content-between">
+                            <span>Ortalama aylık büyüme:</span>
+                            <strong>@Model.NewUsersThisMonth kullanıcı</strong>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+</div> 

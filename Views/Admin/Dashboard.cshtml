@@ -1,0 +1,86 @@
+@model realCabinly.Models.DashboardViewModel
+@{
+    ViewData["Title"] = "Admin Paneli";
+}
+
+<div class="container" style="margin-top: 100px;">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h1>Hoş Geldiniz, Admin!</h1>
+        <form asp-controller="Admin" asp-action="Logout" method="post">
+            <button type="submit" class="btn btn-danger">Çıkış Yap</button>
+        </form>
+    </div>
+
+    <div class="alert alert-success">
+        Başarıyla yönetici paneline giriş yaptınız.
+    </div>
+
+    <div class="row">
+        <div class="col-md-4">
+            <div class="card text-center">
+                <div class="card-body">
+                    <h3 class="card-title"><i class="fas fa-users"></i> Kullanıcılar</h3>
+                    <p class="card-text display-4">@Model.UserCount</p>
+                    <a asp-action="Users" class="btn btn-primary">Kullanıcıları Yönet</a>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card text-center">
+                <div class="card-body">
+                    <h3 class="card-title"><i class="fas fa-home"></i> İlanlar</h3>
+                    <p class="card-text display-4">@Model.ListingCount</p>
+                    <a asp-action="Listings" class="btn btn-primary">İlanları Yönet</a>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card text-center">
+                <div class="card-body">
+                    <h3 class="card-title"><i class="fas fa-book"></i> Rezervasyonlar</h3>
+                    <p class="card-text display-4">@Model.BookingCount</p>
+                    <a asp-action="Bookings" class="btn btn-primary">Rezervasyonları Yönet</a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row mt-4">
+        <div class="col-md-3">
+            <div class="card text-center">
+                <div class="card-body">
+                    <h5 class="card-title"><i class="fas fa-chart-line text-success"></i> Mali Raporlar</h5>
+                    <p class="card-text">Finansal raporları ve gelir analizlerini inceleyin</p>
+                    <a asp-action="FinancialReports" class="btn btn-success btn-sm">Raporları Görüntüle</a>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card text-center">
+                <div class="card-body">
+                    <h5 class="card-title"><i class="fas fa-chart-bar text-info"></i> Kullanıcı İstatistikleri</h5>
+                    <p class="card-text">Kullanıcı sayısı ve büyüme trendlerini görün</p>
+                    <a asp-action="UserStatistics" class="btn btn-info btn-sm">İstatistikleri Görüntüle</a>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card text-center">
+                <div class="card-body">
+                    <h5 class="card-title"><i class="fas fa-tachometer-alt text-warning"></i> Sistem Durumu</h5>
+                    <p class="card-text">Genel sistem durumu ve performans bilgileri</p>
+                    <a asp-action="SystemOverview" class="btn btn-warning btn-sm">Sistem Durumunu Görüntüle</a>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card text-center">
+                <div class="card-body">
+                    <h5 class="card-title"><i class="fas fa-credit-card text-secondary"></i> Ödemeler</h5>
+                    <p class="card-text">Tüm ödeme işlemlerini yönetin</p>
+                    <a asp-action="Payments" class="btn btn-secondary btn-sm">Ödemeleri Yönet</a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div> 

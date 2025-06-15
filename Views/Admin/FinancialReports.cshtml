@@ -1,0 +1,95 @@
+@model realCabinly.Models.FinancialReportViewModel
+@{
+    ViewData["Title"] = "Mali Raporlar";
+}
+
+<div class="container" style="margin-top: 30px;">
+    <h1>@ViewData["Title"]</h1>
+    <p>Sistemin finansal durumu ve ödeme analizleri</p>
+
+    <div class="row mb-4">
+        <div class="col-md-3">
+            <div class="card bg-success text-white">
+                <div class="card-body text-center">
+                    <h4>@Model.TotalRevenue.ToString("C")</h4>
+                    <p>Toplam Gelir</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card bg-info text-white">
+                <div class="card-body text-center">
+                    <h4>@Model.MonthlyRevenue.ToString("C")</h4>
+                    <p>Bu Ay Gelir</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card bg-warning text-white">
+                <div class="card-body text-center">
+                    <h4>@Model.PendingPayments</h4>
+                    <p>Bekleyen Ödemeler</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card bg-danger text-white">
+                <div class="card-body text-center">
+                    <h4>@Model.FailedPayments</h4>
+                    <p>Başarısız Ödemeler</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="card shadow-sm">
+        <div class="card-header text-white">
+            <h4>Son Ödemeler</h4>
+        </div>
+        <div class="card-body">
+            @if (Model.RecentPayments != null && Model.RecentPayments.Any())
+            {
+                <div class="table-responsive">
+                    <table class="table table-striped">
+                        <thead>
+                            <tr>
+                                <th>Kullanıcı</th>
+                                <th>İlan</th>
+                                <th>Tutar</th>
+                                <th>Durum</th>
+                                <th>Tarih</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach (var payment in Model.RecentPayments)
+                            {
+                                <tr>
+                                    <td>@payment.UserName</td>
+                                    <td>@payment.ListingTitle</td>
+                                    <td>@payment.Amount.ToString("C")</td>
+                                    <td>
+                                        @{
+                                            var statusClass = "bg-secondary";
+                                            switch (payment.Status.ToLower())
+                                            {
+                                                case "completed": statusClass = "bg-success"; break;
+                                                case "pending": statusClass = "bg-warning text-dark"; break;
+                                                case "failed": statusClass = "bg-danger"; break;
+                                            }
+                                        }
+                                        <span class="badge @statusClass">@payment.Status</span>
+                                    </td>
+                                    <td>@payment.Paid_At.ToString("dd MMM yyyy")</td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            }
+            else
+            {
+                <div class="alert alert-info">Henüz ödeme kaydı bulunmamaktadır.</div>
+            }
+        </div>
+    </div>
+</div> 
